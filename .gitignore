@@ -1,0 +1,21 @@
+.DS_Store
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Tauri
+src-tauri/target/
+
+# Rust
+target/
+
+# Environment
+.env
+.env.local
+
+# Editor
+.idea/
+.vscode/
+.claude/

@@ -1,0 +1,250 @@
+.workspace {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: 280px minmax(0, 1fr) 320px;
+}
+
+.sidebar,
+.detailColumn {
+  display: grid;
+  gap: var(--space-6);
+  align-content: start;
+}
+
+.historyColumn {
+  min-width: 0;
+}
+
+.repositoryList,
+.branchList,
+.commitList {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.repositoryButton,
+.repositoryButtonActive,
+.commitRow,
+.commitRowActive {
+  width: 100%;
+  border: 1px solid var(--color-border-default);
+  border-radius: 16px;
+  background: var(--color-bg-button);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, transform 140ms ease, background 140ms ease;
+}
+
+.repositoryButton,
+.repositoryButtonActive {
+  padding: var(--space-4);
+}
+
+.repositoryButton:hover,
+.repositoryButtonActive:hover,
+.commitRow:hover,
+.commitRowActive:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-border-strong);
+}
+
+.repositoryButtonActive,
+.commitRowActive {
+  background: var(--color-bg-panel-strong);
+  border-color: var(--color-border-selected);
+}
+
+.repositoryTopline,
+.repositoryMeta,
+.commitTopline,
+.commitMeta,
+.historyHeader,
+.historyStats,
+.detailHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.repositoryTopline span,
+.repositoryMeta,
+.commitMeta,
+.historyStats,
+.detailLabel,
+.previewCopy {
+  color: var(--color-text-secondary);
+}
+
+.repositoryButton p {
+  margin: var(--space-2) 0 var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.branchItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+
+.branchBadge,
+.branchBadgeActive,
+.refTag,
+.detailCommitId,
+.detailBranch {
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.branchBadge,
+.detailCommitId {
+  background: var(--color-badge-neutral);
+}
+
+.branchBadgeActive,
+.refTag,
+.detailBranch {
+  background: var(--color-badge-accent);
+  color: var(--color-badge-accent-text);
+}
+
+.historyLabel {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-accent);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.historyTitle,
+.detailTitle {
+  margin: 0;
+  font-size: 24px;
+}
+
+.commitRow,
+.commitRowActive {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.graphLane {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.graphDot {
+  position: relative;
+  z-index: 1;
+  margin-top: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  background: var(--lane-color, var(--color-graph-lane-default));
+  box-shadow: 0 0 0 4px var(--color-bg-elevated);
+}
+
+.graphLine {
+  position: absolute;
+  top: 18px;
+  bottom: -16px;
+  width: 2px;
+  background: var(--lane-color, var(--color-graph-lane-default));
+  opacity: 0.55;
+}
+
+.graphLane[data-lane="0"] {
+  --lane-color: var(--color-graph-lane-0);
+}
+
+.graphLane[data-lane="1"] {
+  --lane-color: var(--color-graph-lane-1);
+}
+
+.graphLane[data-lane="2"] {
+  --lane-color: var(--color-graph-lane-2);
+}
+
+.graphLane[data-lane="3"] {
+  --lane-color: var(--color-graph-lane-3);
+}
+
+.commitBody {
+  min-width: 0;
+}
+
+.commitTopline {
+  align-items: baseline;
+}
+
+.commitTopline strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commitTopline span {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.commitMeta {
+  align-items: center;
+  margin-top: var(--space-2);
+  font-size: 14px;
+}
+
+.refList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.detailHeader,
+.detailGrid {
+  margin-bottom: var(--space-4);
+}
+
+.detailGrid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detailGrid p,
+.previewList {
+  margin: var(--space-2) 0 0;
+}
+
+.previewList {
+  padding-left: 20px;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 1180px) {
+  .workspace {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+
+  .detailColumn {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .workspace,
+  .detailColumn {
+    grid-template-columns: 1fr;
+  }
+}

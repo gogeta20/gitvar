@@ -1,0 +1,21 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: devops/docker/Dockerfile.dev
+    container_name: gitmap-dev
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+      - cargo-cache:/usr/local/cargo/registry
+      - rustup-cache:/usr/local/rustup
+      - node-cache:/workspace/frontend/node_modules
+    tty: true
+    stdin_open: true
+    command: sleep infinity
+
+volumes:
+  cargo-cache:
+  rustup-cache:
+  node-cache:
+

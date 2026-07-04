@@ -1,0 +1,17 @@
+.card {
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-surface);
+  background: var(--color-bg-panel);
+  box-shadow: var(--shadow-surface);
+  padding: var(--space-5);
+  backdrop-filter: var(--backdrop-surface);
+}
+
+.title {
+  margin: 0 0 var(--space-4);
+  font-size: 18px;
+}
+
+.body {
+  color: var(--color-text-secondary);
+}
