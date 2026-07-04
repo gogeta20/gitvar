@@ -12,5 +12,7 @@ export interface GraphCommit extends Commit {
   shortId: string;
   lane: number;
   parentLanes: number[];
-  visibleLanes: number[];
+  incomingLanes: number[];
+  outgoingLanes: number[];
+  laneCount: number;
 }

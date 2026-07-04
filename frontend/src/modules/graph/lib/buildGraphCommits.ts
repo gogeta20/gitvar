@@ -4,6 +4,10 @@ export function buildGraphCommits(commits: Commit[]): GraphCommit[] {
   const activeLanes: Array<string | null> = [];
 
   return commits.map((commit) => {
+    const incomingLanes = activeLanes
+      .map((value, index) => (value !== null ? index : -1))
+      .filter((index) => index >= 0);
+
     let lane = activeLanes.findIndex((value) => value === commit.id);
 
     if (lane === -1) {
@@ -19,10 +23,6 @@ export function buildGraphCommits(commits: Commit[]): GraphCommit[] {
     }
 
     activeLanes[lane] = commit.id;
-
-    const visibleLanes = activeLanes
-      .map((value, index) => (value !== null ? index : -1))
-      .filter((index) => index >= 0);
 
     const nextLanes = [...activeLanes];
     nextLanes[lane] = null;
@@ -51,6 +51,18 @@ export function buildGraphCommits(commits: Commit[]): GraphCommit[] {
       return parentLane;
     });
 
+    const outgoingLanes = nextLanes
+      .map((value, index) => (value !== null ? index : -1))
+      .filter((index) => index >= 0);
+
+    const laneCount = Math.max(
+      incomingLanes.length > 0 ? Math.max(...incomingLanes) + 1 : 0,
+      outgoingLanes.length > 0 ? Math.max(...outgoingLanes) + 1 : 0,
+      lane + 1,
+      parentLanes.length > 0 ? Math.max(...parentLanes) + 1 : 0,
+      1
+    );
+
     activeLanes.splice(0, activeLanes.length, ...nextLanes);
 
     while (activeLanes.length > 0 && activeLanes[activeLanes.length - 1] === null) {
@@ -62,7 +74,9 @@ export function buildGraphCommits(commits: Commit[]): GraphCommit[] {
       shortId: commit.id.slice(0, 7),
       lane,
       parentLanes,
-      visibleLanes
+      incomingLanes,
+      outgoingLanes,
+      laneCount
     };
   });
 }

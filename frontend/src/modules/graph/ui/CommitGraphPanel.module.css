@@ -39,14 +39,12 @@
 .graphLine,
 .graphPath {
   fill: none;
-  stroke: var(--color-graph-lane-default);
   stroke-linecap: round;
   stroke-width: 2.4;
   opacity: 0.7;
 }
 
 .graphDot {
-  fill: var(--color-graph-lane-default);
   stroke: var(--color-bg-elevated);
   stroke-width: 4;
 }
@@ -85,6 +83,10 @@
   font-size: 14px;
 }
 
+.commitMeta span {
+  min-width: 0;
+}
+
 .refList {
   display: flex;
   flex-wrap: wrap;
@@ -104,4 +106,20 @@
 
 .error {
   margin: 0;
+}
+
+@media (max-width: 900px) {
+  .commitRow,
+  .commitRowActive {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+
+  .commitTopline,
+  .commitMeta {
+    flex-direction: column;
+  }
+
+  .refList {
+    justify-content: flex-start;
+  }
 }

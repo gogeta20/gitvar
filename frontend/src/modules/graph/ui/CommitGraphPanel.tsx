@@ -17,6 +17,12 @@ const LANE_WIDTH = 22;
 const ROW_HEIGHT = 72;
 const SVG_PADDING_X = 10;
 const DOT_RADIUS = 5;
+const LANE_COLORS = [
+  "var(--color-graph-lane-0)",
+  "var(--color-graph-lane-1)",
+  "var(--color-graph-lane-2)",
+  "var(--color-graph-lane-3)"
+];
 
 function formatDateLabel(input: string): string {
   const date = new Date(input);
@@ -49,6 +55,10 @@ function buildConnectorPath(
   return `M ${startX} ${midY} C ${startX} ${controlY} ${bendX} ${controlY} ${endX} ${endY}`;
 }
 
+function resolveLaneColor(lane: number): string {
+  return LANE_COLORS[lane % LANE_COLORS.length];
+}
+
 function GraphRow({
   commit,
   isSelected,
@@ -58,14 +68,10 @@ function GraphRow({
   isSelected: boolean;
   onSelect: () => void;
 }) {
-  const laneCount = Math.max(
-    commit.visibleLanes.length,
-    commit.parentLanes.length,
-    commit.lane + 1,
-    1
-  );
+  const laneCount = commit.laneCount;
   const graphWidth = SVG_PADDING_X * 2 + Math.max(1, laneCount - 1) * LANE_WIDTH + 2;
   const dotX = SVG_PADDING_X + commit.lane * LANE_WIDTH;
+  const dotY = ROW_HEIGHT * 0.5;
 
   return (
     <button
@@ -78,30 +84,56 @@ function GraphRow({
         viewBox={`0 0 ${graphWidth} ${ROW_HEIGHT}`}
         preserveAspectRatio="none"
       >
-        {commit.visibleLanes.map((lane) => {
+        {commit.incomingLanes.map((lane) => {
           const x = SVG_PADDING_X + lane * LANE_WIDTH;
 
           return (
             <line
-              key={`visible-${commit.id}-${lane}`}
+              key={`incoming-${commit.id}-${lane}`}
               className={styles.graphLine}
+              style={{ stroke: resolveLaneColor(lane) }}
               x1={x}
               x2={x}
               y1="0"
+              y2={dotY}
+            />
+          );
+        })}
+
+        {commit.outgoingLanes.map((lane) => {
+          const x = SVG_PADDING_X + lane * LANE_WIDTH;
+
+          return (
+            <line
+              key={`outgoing-${commit.id}-${lane}`}
+              className={styles.graphLine}
+              style={{ stroke: resolveLaneColor(lane) }}
+              x1={x}
+              x2={x}
+              y1={dotY}
               y2={ROW_HEIGHT}
             />
           );
         })}
 
-        {commit.parentLanes.map((lane, index) => (
+        {commit.parentLanes
+          .filter((lane) => lane !== commit.lane)
+          .map((lane, index) => (
           <path
             key={`parent-${commit.id}-${lane}-${index}`}
             className={styles.graphPath}
+            style={{ stroke: resolveLaneColor(lane) }}
             d={buildConnectorPath(commit.lane, lane, graphWidth)}
           />
-        ))}
+          ))}
 
-        <circle className={styles.graphDot} cx={dotX} cy={ROW_HEIGHT * 0.5} r={DOT_RADIUS} />
+        <circle
+          className={styles.graphDot}
+          cx={dotX}
+          cy={dotY}
+          r={DOT_RADIUS}
+          style={{ fill: resolveLaneColor(commit.lane) }}
+        />
       </svg>
 
       <div className={styles.commitBody}>
