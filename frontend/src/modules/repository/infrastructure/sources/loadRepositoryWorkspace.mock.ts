@@ -8,7 +8,7 @@ export async function loadRepositoryWorkspaceFromMock(): Promise<RepositoryWorks
         id: "repo-1",
         name: "gitmap",
         path: "/home/mau/projects/personal/gipmap",
-        currentBranch: "feature/real-branches-panel",
+        currentBranch: "feature/real-commit-graph",
         status: "modified",
         ahead: 3,
         behind: 0
@@ -34,9 +34,14 @@ export async function loadRepositoryWorkspaceFromMock(): Promise<RepositoryWorks
     ],
     branches: [
       {
-        name: "feature/real-branches-panel",
+        name: "feature/real-commit-graph",
         kind: "feature",
         isActive: true
+      },
+      {
+        name: "feature/real-branches-panel",
+        kind: "feature",
+        isActive: false
       },
       {
         name: "main",
@@ -62,9 +67,9 @@ export async function loadRepositoryWorkspaceFromMock(): Promise<RepositoryWorks
         author: "Mau",
         email: "mau@example.dev",
         dateLabel: "Today · 18:42",
-        branch: "feature/frontend-foundation",
+        branch: "feature/real-commit-graph",
         lane: 0,
-        refs: ["HEAD", "feature/frontend-foundation"],
+        refs: ["HEAD", "feature/real-commit-graph"],
         filesChanged: 18,
         additions: 544,
         deletions: 0

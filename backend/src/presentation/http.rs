@@ -4,10 +4,16 @@ use std::path::PathBuf;
 
 use crate::app::branches::contracts::BranchReader;
 use crate::app::branches::read_branches::read_branches;
+use crate::app::commits::contracts::CommitReader;
+use crate::app::commits::read_commits::read_commits;
 use crate::domain::branch::Branch;
+use crate::domain::commit::Commit;
 use crate::domain::errors::AppError;
 
-pub fn serve(branch_reader: &dyn BranchReader) -> Result<(), AppError> {
+pub fn serve(
+    branch_reader: &dyn BranchReader,
+    commit_reader: &dyn CommitReader,
+) -> Result<(), AppError> {
     let listener = TcpListener::bind("127.0.0.1:7878")
         .map_err(|error| AppError::IoError(error.to_string()))?;
 
@@ -26,7 +32,7 @@ pub fn serve(branch_reader: &dyn BranchReader) -> Result<(), AppError> {
         }
 
         let request = String::from_utf8_lossy(&buffer[..bytes_read]);
-        let response = route_request(&request, branch_reader);
+        let response = route_request(&request, branch_reader, commit_reader);
 
         stream
             .write_all(response.as_bytes())
@@ -36,7 +42,11 @@ pub fn serve(branch_reader: &dyn BranchReader) -> Result<(), AppError> {
     Ok(())
 }
 
-fn route_request(request: &str, branch_reader: &dyn BranchReader) -> String {
+fn route_request(
+    request: &str,
+    branch_reader: &dyn BranchReader,
+    commit_reader: &dyn CommitReader,
+) -> String {
     let Some(first_line) = request.lines().next() else {
         return json_response(400, r#"{"error":"Invalid request."}"#);
     };
@@ -53,24 +63,17 @@ fn route_request(request: &str, branch_reader: &dyn BranchReader) -> String {
         return handle_branch_request(target, branch_reader);
     }
 
+    if target.starts_with("/api/commits") {
+        return handle_commit_request(target, commit_reader);
+    }
+
     json_response(404, r#"{"error":"Not found."}"#)
 }
 
 fn handle_branch_request(target: &str, branch_reader: &dyn BranchReader) -> String {
-    let Some(query) = target.split('?').nth(1) else {
+    let Some(path) = extract_repo_path(target) else {
         return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
     };
-
-    let repo_path = query
-        .split('&')
-        .find_map(|part| part.strip_prefix("repoPath="))
-        .map(percent_decode);
-
-    let Some(repo_path) = repo_path else {
-        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
-    };
-
-    let path = PathBuf::from(repo_path);
 
     match read_branches(branch_reader, &path) {
         Ok(branches) => json_response(200, &branches_to_json(&branches)),
@@ -79,6 +82,30 @@ fn handle_branch_request(target: &str, branch_reader: &dyn BranchReader) -> Stri
             &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
         ),
     }
+}
+
+fn handle_commit_request(target: &str, commit_reader: &dyn CommitReader) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    match read_commits(commit_reader, &path) {
+        Ok(commits) => json_response(200, &commits_to_json(&commits)),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn extract_repo_path(target: &str) -> Option<PathBuf> {
+    let query = target.split('?').nth(1)?;
+    let repo_path = query
+        .split('&')
+        .find_map(|part| part.strip_prefix("repoPath="))
+        .map(percent_decode)?;
+
+    Some(PathBuf::from(repo_path))
 }
 
 fn branches_to_json(branches: &[Branch]) -> String {
@@ -104,6 +131,51 @@ fn branches_to_json(branches: &[Branch]) -> String {
         .join(",");
 
     format!(r#"{{"branches":[{body}]}}"#)
+}
+
+fn commits_to_json(commits: &[Commit]) -> String {
+    let body = commits
+        .iter()
+        .map(|commit| {
+            let parents = commit
+                .parents
+                .iter()
+                .map(|parent| format!(r#""{}""#, escape_json(parent)))
+                .collect::<Vec<_>>()
+                .join(",");
+
+            let refs = commit
+                .refs
+                .iter()
+                .map(|reference| format!(r#""{}""#, escape_json(reference)))
+                .collect::<Vec<_>>()
+                .join(",");
+
+            format!(
+                concat!(
+                    "{{",
+                    r#""id":"{}","#,
+                    r#""parents":[{}],"#,
+                    r#""refs":[{}],"#,
+                    r#""authorName":"{}","#,
+                    r#""authorEmail":"{}","#,
+                    r#""authoredAt":"{}","#,
+                    r#""message":"{}""#,
+                    "}}"
+                ),
+                escape_json(&commit.id),
+                parents,
+                refs,
+                escape_json(&commit.author_name),
+                escape_json(&commit.author_email),
+                escape_json(&commit.authored_at),
+                escape_json(&commit.message),
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+
+    format!(r#"{{"commits":[{body}]}}"#)
 }
 
 fn json_response(status_code: u16, body: &str) -> String {

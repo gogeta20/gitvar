@@ -1,9 +1,10 @@
 import { BranchesPanel } from "@modules/branches/ui/BranchesPanel";
+import { CommitGraphPanel } from "@modules/graph/ui/CommitGraphPanel";
+import { GraphCommit } from "@modules/graph/domain/commit";
 import { useEffect, useMemo, useState } from "react";
 import { InfoCard } from "@core/components/InfoCard";
 import { loadRepositoryWorkspace } from "@modules/repository/application/use-cases/loadRepositoryWorkspace";
 import {
-  CommitNode,
   RepositorySummary,
   RepositoryWorkspace as RepositoryWorkspaceState
 } from "@modules/repository/domain/repository";
@@ -19,8 +20,9 @@ export function RepositoryWorkspace({
 }: RepositoryWorkspaceProps) {
   const [workspace, setWorkspace] = useState<RepositoryWorkspaceState | null>(null);
   const [selectedRepositoryId, setSelectedRepositoryId] = useState<string | null>(null);
-  const [selectedCommitId, setSelectedCommitId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [graphCommits, setGraphCommits] = useState<GraphCommit[]>([]);
+  const [selectedCommitId, setSelectedCommitId] = useState<string | null>(null);
 
   useEffect(() => {
     const repositoryReader = createRepositoryReader();
@@ -31,7 +33,6 @@ export function RepositoryWorkspace({
         setSelectedRepositoryId(
           initialRepositoryId ?? nextWorkspace.selectedRepositoryId
         );
-        setSelectedCommitId(nextWorkspace.selectedCommitId);
       })
       .catch((currentError: unknown) => {
         setError(
@@ -50,19 +51,19 @@ export function RepositoryWorkspace({
     );
   }, [workspace, selectedRepositoryId]);
 
-  const selectedCommit = useMemo<CommitNode | null>(() => {
-    if (!workspace || !selectedCommitId) {
+  const selectedCommit = useMemo(() => {
+    if (!selectedCommitId) {
       return null;
     }
 
-    return workspace.commits.find((item) => item.id === selectedCommitId) ?? null;
-  }, [workspace, selectedCommitId]);
+    return graphCommits.find((item) => item.id === selectedCommitId) ?? null;
+  }, [graphCommits, selectedCommitId]);
 
   if (error) {
     return <InfoCard title="Repository workspace">{error}</InfoCard>;
   }
 
-  if (!workspace || !selectedRepository || !selectedCommit) {
+  if (!workspace || !selectedRepository) {
     return <InfoCard title="Repository workspace">Loading workspace...</InfoCard>;
   }
 
@@ -104,86 +105,61 @@ export function RepositoryWorkspace({
       </aside>
 
       <div className={styles.historyColumn}>
-        <InfoCard title="History map">
-          <div className={styles.historyHeader}>
-            <div>
-              <p className={styles.historyLabel}>Focused repository</p>
-              <h2 className={styles.historyTitle}>{selectedRepository.name}</h2>
-            </div>
-            <div className={styles.historyStats}>
-              <span>{workspace.commits.length} commits</span>
-              <span>{workspace.branches.length} mock branches</span>
-            </div>
+        <div className={styles.historyIntro}>
+          <div>
+            <p className={styles.historyLabel}>Focused repository</p>
+            <h2 className={styles.historyTitle}>{selectedRepository.name}</h2>
           </div>
-
-          <div className={styles.commitList}>
-            {workspace.commits.map((commit) => {
-              const isSelected = commit.id === selectedCommit.id;
-
-              return (
-                <button
-                  key={commit.id}
-                  className={isSelected ? styles.commitRowActive : styles.commitRow}
-                  onClick={() => setSelectedCommitId(commit.id)}
-                  type="button"
-                >
-                  <div className={styles.graphLane} data-lane={commit.lane}>
-                    <span className={styles.graphDot} />
-                    <span className={styles.graphLine} />
-                  </div>
-
-                  <div className={styles.commitBody}>
-                    <div className={styles.commitTopline}>
-                      <strong>{commit.message}</strong>
-                      <span>{commit.dateLabel}</span>
-                    </div>
-                    <div className={styles.commitMeta}>
-                      <span>
-                        {commit.shortId} · {commit.author}
-                      </span>
-                      <div className={styles.refList}>
-                        {commit.refs.map((ref) => (
-                          <span key={ref} className={styles.refTag}>
-                            {ref}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
+          <div className={styles.historyStats}>
+            <span>Real commit graph</span>
+            <span>Mock details for now</span>
           </div>
-        </InfoCard>
+        </div>
+
+        <CommitGraphPanel
+          onCommitsLoaded={setGraphCommits}
+          onSelectCommit={setSelectedCommitId}
+          repositoryPath={selectedRepository.path}
+          selectedCommitId={selectedCommitId}
+        />
       </div>
 
       <aside className={styles.detailColumn}>
         <InfoCard title="Commit detail">
-          <div className={styles.detailHeader}>
-            <span className={styles.detailCommitId}>{selectedCommit.shortId}</span>
-            <span className={styles.detailBranch}>{selectedCommit.branch}</span>
-          </div>
-          <h3 className={styles.detailTitle}>{selectedCommit.message}</h3>
-          <div className={styles.detailGrid}>
-            <div>
-              <span className={styles.detailLabel}>Author</span>
-              <p>{selectedCommit.author}</p>
-            </div>
-            <div>
-              <span className={styles.detailLabel}>Email</span>
-              <p>{selectedCommit.email}</p>
-            </div>
-            <div>
-              <span className={styles.detailLabel}>Files</span>
-              <p>{selectedCommit.filesChanged}</p>
-            </div>
-            <div>
-              <span className={styles.detailLabel}>Changes</span>
-              <p>
-                +{selectedCommit.additions} / -{selectedCommit.deletions}
-              </p>
-            </div>
-          </div>
+          {selectedCommit ? (
+            <>
+              <div className={styles.detailHeader}>
+                <span className={styles.detailCommitId}>{selectedCommit.shortId}</span>
+                <span className={styles.detailBranch}>
+                  {selectedCommit.refs[0] ?? "commit"}
+                </span>
+              </div>
+              <h3 className={styles.detailTitle}>{selectedCommit.message}</h3>
+              <div className={styles.detailGrid}>
+                <div>
+                  <span className={styles.detailLabel}>Author</span>
+                  <p>{selectedCommit.authorName}</p>
+                </div>
+                <div>
+                  <span className={styles.detailLabel}>Email</span>
+                  <p>{selectedCommit.authorEmail}</p>
+                </div>
+                <div>
+                  <span className={styles.detailLabel}>Parents</span>
+                  <p>{selectedCommit.parents.length}</p>
+                </div>
+                <div>
+                  <span className={styles.detailLabel}>Date</span>
+                  <p>{selectedCommit.authoredAt}</p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className={styles.previewCopy}>
+              Select a commit from the graph to inspect its details. The detail panel
+              still uses mock metadata until the next backend slice.
+            </p>
+          )}
         </InfoCard>
 
         <InfoCard title="Operation preview">

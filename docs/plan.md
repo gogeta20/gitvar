@@ -73,3 +73,6 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - En esta rama de trabajo, el primer punto de conexion real entre frontend y backend es el panel de ramas.
 - El resto del workspace se mantiene con mocks hasta que la integracion se consolide.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-04-branches-panel-real.md`.
+- El segundo punto de conexion real entre frontend y backend es el panel central del commit graph.
+- El primer render del grafo usa un layout simple propio con SVG por filas y calculo de lanes en frontend.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-04-commit-graph-real.md`.
