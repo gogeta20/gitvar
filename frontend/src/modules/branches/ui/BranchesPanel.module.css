@@ -1,0 +1,44 @@
+.branchList {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.branchItem,
+.branchItemActive {
+  padding: var(--space-2) 0;
+}
+
+.branchNameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.branchIcon {
+  width: 12px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  line-height: 1;
+}
+
+.branchName,
+.branchNameActive {
+  font-size: 14px;
+}
+
+.branchName {
+  color: var(--color-text-primary);
+}
+
+.branchNameActive {
+  color: var(--color-text-accent);
+}
+
+.empty {
+  color: var(--color-text-secondary);
+}
+
+.error {
+  margin: 0;
+  color: #ff6b81;
+}

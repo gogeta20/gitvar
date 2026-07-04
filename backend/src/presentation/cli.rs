@@ -2,7 +2,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 
 use crate::app::branches::contracts::BranchReader;
-use crate::app::branches::use_cases::read_branches;
+use crate::app::branches::read_branches::read_branches;
 use crate::domain::errors::AppError;
 
 pub fn run(branch_reader: &dyn BranchReader) -> Result<(), AppError> {

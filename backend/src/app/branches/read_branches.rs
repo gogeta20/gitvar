@@ -10,3 +10,4 @@ pub fn read_branches(
 ) -> Result<Vec<Branch>, AppError> {
     branch_reader.read_branches(repository_path)
 }
+

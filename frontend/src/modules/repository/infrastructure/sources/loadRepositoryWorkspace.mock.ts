@@ -7,8 +7,8 @@ export async function loadRepositoryWorkspaceFromMock(): Promise<RepositoryWorks
       {
         id: "repo-1",
         name: "gitmap",
-        path: "~/projects/personal/gipmap",
-        currentBranch: "feature/frontend-foundation",
+        path: "/home/mau/projects/personal/gipmap",
+        currentBranch: "feature/real-branches-panel",
         status: "modified",
         ahead: 3,
         behind: 0
@@ -34,7 +34,7 @@ export async function loadRepositoryWorkspaceFromMock(): Promise<RepositoryWorks
     ],
     branches: [
       {
-        name: "feature/frontend-foundation",
+        name: "feature/real-branches-panel",
         kind: "feature",
         isActive: true
       },
@@ -130,4 +130,3 @@ export async function loadRepositoryWorkspaceFromMock(): Promise<RepositoryWorks
     selectedCommitId: "7f89cd102a"
   });
 }
-

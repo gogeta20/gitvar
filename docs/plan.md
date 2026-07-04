@@ -70,3 +70,6 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - Empezar con Git CLI para obtener datos reales del repositorio antes de evaluar otras integraciones.
 - El primer caso de uso implementado es la lectura de ramas con `git for-each-ref`.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-04-backend-primer-caso-de-uso.md`.
+- En esta rama de trabajo, el primer punto de conexion real entre frontend y backend es el panel de ramas.
+- El resto del workspace se mantiene con mocks hasta que la integracion se consolide.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-04-branches-panel-real.md`.

@@ -16,7 +16,6 @@
 }
 
 .repositoryList,
-.branchList,
 .commitList {
   display: grid;
   gap: var(--space-3);
@@ -82,15 +81,6 @@
   font-size: 14px;
 }
 
-.branchItem {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) 0;
-}
-
-.branchBadge,
-.branchBadgeActive,
 .refTag,
 .detailCommitId,
 .detailBranch {
@@ -101,12 +91,10 @@
   letter-spacing: 0.04em;
 }
 
-.branchBadge,
 .detailCommitId {
   background: var(--color-badge-neutral);
 }
 
-.branchBadgeActive,
 .refTag,
 .detailBranch {
   background: var(--color-badge-accent);

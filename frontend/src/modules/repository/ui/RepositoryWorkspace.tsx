@@ -1,3 +1,4 @@
+import { BranchesPanel } from "@modules/branches/ui/BranchesPanel";
 import { useEffect, useMemo, useState } from "react";
 import { InfoCard } from "@core/components/InfoCard";
 import { loadRepositoryWorkspace } from "@modules/repository/application/use-cases/loadRepositoryWorkspace";
@@ -96,19 +97,10 @@ export function RepositoryWorkspace({
             })}
           </div>
         </InfoCard>
-
-        <InfoCard title="Branches">
-          <div className={styles.branchList}>
-            {workspace.branches.map((branch) => (
-              <div key={branch.name} className={styles.branchItem}>
-                <span className={branch.isActive ? styles.branchBadgeActive : styles.branchBadge}>
-                  {branch.kind}
-                </span>
-                <span>{branch.name}</span>
-              </div>
-            ))}
-          </div>
-        </InfoCard>
+        <BranchesPanel
+          activeBranchName={selectedRepository.currentBranch}
+          repositoryPath={selectedRepository.path}
+        />
       </aside>
 
       <div className={styles.historyColumn}>
@@ -120,7 +112,7 @@ export function RepositoryWorkspace({
             </div>
             <div className={styles.historyStats}>
               <span>{workspace.commits.length} commits</span>
-              <span>{workspace.branches.length} branches</span>
+              <span>{workspace.branches.length} mock branches</span>
             </div>
           </div>
 
