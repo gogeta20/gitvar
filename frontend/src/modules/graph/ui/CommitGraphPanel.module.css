@@ -1,38 +1,37 @@
 .commitList {
   display: grid;
-  gap: var(--space-3);
+  gap: 0;
 }
 
 .commitRow,
 .commitRowActive {
   display: grid;
-  grid-template-columns: 76px minmax(0, 1fr);
+  grid-template-columns: minmax(240px, 320px) 76px minmax(0, 1fr) 140px 132px;
   gap: var(--space-3);
   width: 100%;
-  border: 1px solid var(--color-border-default);
-  border-radius: 16px;
-  background: var(--color-bg-button);
+  border: 0;
+  border-bottom: 1px solid var(--color-border-default);
+  border-radius: 0;
+  background: transparent;
   color: inherit;
   text-align: left;
   cursor: pointer;
-  padding: var(--space-4);
-  transition: border-color 140ms ease, transform 140ms ease, background 140ms ease;
+  padding: 8px 0;
+  transition: background 140ms ease;
 }
 
 .commitRow:hover,
 .commitRowActive:hover {
-  transform: translateY(-1px);
-  border-color: var(--color-border-strong);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .commitRowActive {
-  background: var(--color-bg-panel-strong);
-  border-color: var(--color-border-selected);
+  background: rgba(255, 255, 255, 0.035);
 }
 
 .graphSvg {
   width: 100%;
-  height: 72px;
+  height: 46px;
   overflow: visible;
 }
 
@@ -49,63 +48,74 @@
   stroke-width: 4;
 }
 
-.commitBody {
+.refCell,
+.messageCell,
+.authorCell,
+.dateCell {
   min-width: 0;
 }
 
-.commitTopline,
-.commitMeta {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-4);
+.messageCell {
+  display: grid;
+  gap: 2px;
 }
 
-.commitTopline {
-  align-items: baseline;
-}
-
-.commitTopline strong {
+.messageCell strong {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 14px;
 }
 
-.commitTopline span,
-.commitMeta,
+.shortId,
+.authorCell,
+.dateCell,
 .empty,
 .error {
   color: var(--color-text-secondary);
 }
 
-.commitMeta {
-  align-items: center;
-  margin-top: var(--space-2);
-  font-size: 14px;
-}
-
-.commitMeta span {
-  min-width: 0;
+.shortId,
+.authorCell,
+.dateCell {
+  font-size: 13px;
 }
 
 .refList {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  align-items: center;
   gap: var(--space-2);
+  min-height: 100%;
 }
 
 .refTag {
   border-radius: var(--radius-pill);
-  padding: 4px 10px;
+  padding: 3px 8px;
   background: var(--color-badge-accent);
   color: var(--color-badge-accent-text);
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
+.refPlaceholder {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.authorCell,
+.dateCell {
+  display: flex;
+  align-items: center;
+}
+
 .error {
   margin: 0;
+}
+
+.commitList > :last-child {
+  border-bottom: 0;
 }
 
 @media (max-width: 900px) {
@@ -114,12 +124,13 @@
     grid-template-columns: 64px minmax(0, 1fr);
   }
 
-  .commitTopline,
-  .commitMeta {
-    flex-direction: column;
+  .refCell,
+  .authorCell,
+  .dateCell {
+    display: none;
   }
 
-  .refList {
-    justify-content: flex-start;
+  .messageCell strong {
+    white-space: normal;
   }
 }

@@ -14,7 +14,7 @@ interface CommitGraphPanelProps {
 }
 
 const LANE_WIDTH = 22;
-const ROW_HEIGHT = 72;
+const ROW_HEIGHT = 46;
 const SVG_PADDING_X = 10;
 const DOT_RADIUS = 5;
 const LANE_COLORS = [
@@ -136,24 +136,27 @@ function GraphRow({
         />
       </svg>
 
-      <div className={styles.commitBody}>
-        <div className={styles.commitTopline}>
-          <strong>{commit.message}</strong>
-          <span>{formatDateLabel(commit.authoredAt)}</span>
-        </div>
-        <div className={styles.commitMeta}>
-          <span>
-            {commit.shortId} · {commit.authorName}
-          </span>
-          <div className={styles.refList}>
-            {commit.refs.map((ref) => (
+      <div className={styles.refCell}>
+        <div className={styles.refList}>
+          {commit.refs.length > 0 ? (
+            commit.refs.map((ref) => (
               <span key={ref} className={styles.refTag}>
                 {ref}
               </span>
-            ))}
-          </div>
+            ))
+          ) : (
+            <span className={styles.refPlaceholder}>-</span>
+          )}
         </div>
       </div>
+
+      <div className={styles.messageCell}>
+        <strong>{commit.message}</strong>
+        <span className={styles.shortId}>{commit.shortId}</span>
+      </div>
+
+      <div className={styles.authorCell}>{commit.authorName}</div>
+      <div className={styles.dateCell}>{formatDateLabel(commit.authoredAt)}</div>
     </button>
   );
 }

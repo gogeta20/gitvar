@@ -8,7 +8,7 @@ export async function loadRepositoryWorkspaceFromMock(): Promise<RepositoryWorks
         id: "repo-1",
         name: "gitmap",
         path: "/home/mau/projects/personal/gipmap",
-        currentBranch: "feature/real-commit-graph",
+        currentBranch: "feature/graph-divergence-probe",
         status: "modified",
         ahead: 3,
         behind: 0
@@ -34,9 +34,19 @@ export async function loadRepositoryWorkspaceFromMock(): Promise<RepositoryWorks
     ],
     branches: [
       {
-        name: "feature/real-commit-graph",
+        name: "feature/graph-divergence-probe",
         kind: "feature",
         isActive: true
+      },
+      {
+        name: "feature/graph-layout-improvements",
+        kind: "feature",
+        isActive: false
+      },
+      {
+        name: "feature/real-commit-graph",
+        kind: "main",
+        isActive: false
       },
       {
         name: "feature/real-branches-panel",
@@ -46,16 +56,6 @@ export async function loadRepositoryWorkspaceFromMock(): Promise<RepositoryWorks
       {
         name: "main",
         kind: "main",
-        isActive: false
-      },
-      {
-        name: "release/0.1.0",
-        kind: "release",
-        isActive: false
-      },
-      {
-        name: "hotfix/theme-flicker",
-        kind: "hotfix",
         isActive: false
       }
     ],
