@@ -18,6 +18,9 @@ fn parse_branch_line(line: &str) -> Result<Branch, AppError> {
     let short_name = parts
         .next()
         .ok_or_else(|| AppError::ParseError(format!("Missing short name in line: {line}")))?;
+    let is_current = parts
+        .next()
+        .ok_or_else(|| AppError::ParseError(format!("Missing current flag in line: {line}")))?;
     let target_commit = parts
         .next()
         .ok_or_else(|| AppError::ParseError(format!("Missing target commit in line: {line}")))?;
@@ -32,6 +35,7 @@ fn parse_branch_line(line: &str) -> Result<Branch, AppError> {
         name: short_name.to_string(),
         full_ref: full_ref.to_string(),
         is_remote: full_ref.starts_with("refs/remotes/"),
+        is_current: is_current == "true",
         target_commit: target_commit.to_string(),
     })
 }
@@ -43,15 +47,17 @@ mod tests {
     #[test]
     fn parses_local_and_remote_refs() {
         let raw = "\
-refs/heads/main|main|abc123\n\
-refs/remotes/origin/main|origin/main|def456\n";
+refs/heads/main|main|true|abc123\n\
+refs/remotes/origin/main|origin/main|false|def456\n";
 
         let branches = parse_branch_refs(raw).expect("branches should parse");
 
         assert_eq!(branches.len(), 2);
         assert_eq!(branches[0].name, "main");
         assert!(!branches[0].is_remote);
+        assert!(branches[0].is_current);
         assert_eq!(branches[1].name, "origin/main");
         assert!(branches[1].is_remote);
+        assert!(!branches[1].is_current);
     }
 }

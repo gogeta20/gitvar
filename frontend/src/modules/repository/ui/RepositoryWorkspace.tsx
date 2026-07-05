@@ -98,10 +98,7 @@ export function RepositoryWorkspace({
             })}
           </div>
         </InfoCard>
-        <BranchesPanel
-          activeBranchName={selectedRepository.currentBranch}
-          repositoryPath={selectedRepository.path}
-        />
+        <BranchesPanel repositoryPath={selectedRepository.path} />
       </aside>
 
       <div className={styles.historyColumn}>
