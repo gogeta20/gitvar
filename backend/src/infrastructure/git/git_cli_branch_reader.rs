@@ -21,7 +21,7 @@ impl BranchReader for GitCliBranchReader {
                 "for-each-ref",
                 "refs/heads",
                 "refs/remotes",
-                "--format=%(refname)|%(refname:short)|%(objectname)",
+                "--format=%(refname)|%(refname:short)|%(if)%(HEAD)%(then)true%(else)false%(end)|%(objectname)",
             ])
             .current_dir(repository_path)
             .output()

@@ -141,12 +141,14 @@ fn branches_to_json(branches: &[Branch]) -> String {
                     r#""name":"{}","#,
                     r#""fullRef":"{}","#,
                     r#""isRemote":{},"#,
+                    r#""isCurrent":{},"#,
                     r#""targetCommit":"{}""#,
                     "}}"
                 ),
                 escape_json(&branch.name),
                 escape_json(&branch.full_ref),
                 branch.is_remote,
+                branch.is_current,
                 escape_json(&branch.target_commit),
             )
         })
