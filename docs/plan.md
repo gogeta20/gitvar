@@ -86,3 +86,5 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-nodo-working-changes.md`.
 - Los commits que son punto de origen de varias ramas muestran un badge con la cantidad de ramas que divergen desde ahi, calculado en el frontend a partir del propio layout engine.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-badge-divergencia-ramas.md`.
+- Cuando varias ramas apuntan al mismo commit, el `History map` muestra solo la rama actualmente checkeada y un badge `+N` con el resto en un tooltip, en vez de listar todas las refs en linea.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-badge-overflow-refs.md`.

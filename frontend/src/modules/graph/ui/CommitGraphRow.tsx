@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { GraphCommit } from "@modules/graph/domain/commit";
+import { resolveCommitRefs } from "@modules/graph/lib/resolveCommitRefs";
 import { resolveLaneColor } from "@modules/graph/render/graphRenderConfig";
 import { CommitGraphSvg } from "@modules/graph/render/CommitGraphSvg";
 import styles from "./CommitGraphPanel.module.css";
@@ -29,6 +30,7 @@ export function CommitGraphRow({
   onSelect
 }: CommitGraphRowProps) {
   const laneColor = resolveLaneColor(commit.lane);
+  const { primary, otherRefs } = resolveCommitRefs(commit.refs);
 
   return (
     <button
@@ -38,13 +40,19 @@ export function CommitGraphRow({
       type="button"
     >
       <div className={styles.refsCell}>
-        {commit.refs.length > 0
-          ? commit.refs.map((ref) => (
-              <span key={ref} className={styles.refText} title={ref}>
-                {ref}
-              </span>
-            ))
-          : null}
+        {primary ? (
+          <span className={styles.refText} title={primary}>
+            {primary}
+          </span>
+        ) : null}
+        {otherRefs.length > 0 ? (
+          <span
+            className={styles.refCountBadge}
+            title={`Also here: ${otherRefs.join(", ")}`}
+          >
+            +{otherRefs.length}
+          </span>
+        ) : null}
       </div>
 
       <div className={styles.graphCell}>
