@@ -16,7 +16,6 @@
   min-width: 0;
 }
 
-.historyStats,
 .detailHeader {
   display: flex;
   justify-content: space-between;
@@ -24,7 +23,6 @@
 }
 
 .commitMeta,
-.historyStats,
 .detailLabel,
 .previewCopy {
   color: var(--color-text-secondary);
@@ -50,25 +48,9 @@
   color: var(--color-badge-accent-text);
 }
 
-.historyLabel {
-  margin: 0 0 var(--space-2);
-  color: var(--color-text-accent);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-}
-
-.historyTitle,
 .detailTitle {
   margin: 0;
   font-size: 24px;
-}
-
-.historyIntro {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
 }
 
 .detailHeader,
@@ -109,7 +91,4 @@
     grid-template-columns: 1fr;
   }
 
-  .historyIntro {
-    flex-direction: column;
-  }
 }

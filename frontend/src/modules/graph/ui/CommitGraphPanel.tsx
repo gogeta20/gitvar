@@ -13,6 +13,8 @@ import styles from "./CommitGraphPanel.module.css";
 
 interface CommitGraphPanelProps {
   repositoryPath: string;
+  selectedBranchName: string | null;
+  selectedBranchTargetCommit: string | null;
   selectedCommitId: string | null;
   onSelectCommit: (commitId: string) => void;
   onCommitsLoaded?: (commits: GraphCommit[]) => void;
@@ -20,6 +22,8 @@ interface CommitGraphPanelProps {
 
 export function CommitGraphPanel({
   repositoryPath,
+  selectedBranchName,
+  selectedBranchTargetCommit,
   selectedCommitId,
   onSelectCommit,
   onCommitsLoaded
@@ -98,7 +102,7 @@ export function CommitGraphPanel({
   }, [graphCommits, onSelectCommit, selectedCommitId]);
 
   return (
-    <InfoCard title="History map">
+    <InfoCard>
       {error ? <p className={styles.error}>{error}</p> : null}
 
       {!error ? (
@@ -108,6 +112,16 @@ export function CommitGraphPanel({
               key={commit.id}
               commit={commit}
               graphWidth={graphWidth}
+              selectedBranchName={selectedBranchName}
+              isBranchRefSelected={Boolean(
+                selectedBranchName &&
+                  commit.refs.some(
+                    (ref) =>
+                      ref === selectedBranchName ||
+                      ref === `HEAD -> ${selectedBranchName}`
+                  )
+              )}
+              isBranchTarget={commit.id === selectedBranchTargetCommit}
               isSelected={commit.id === selectedCommitId}
               onSelect={() => onSelectCommit(commit.id)}
             />

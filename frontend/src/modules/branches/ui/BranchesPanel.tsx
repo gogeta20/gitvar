@@ -7,10 +7,14 @@ import styles from "./BranchesPanel.module.css";
 
 interface BranchesPanelProps {
   repositoryPath: string;
+  selectedBranchName: string | null;
+  onSelectBranch: (branch: Branch) => void;
 }
 
 export function BranchesPanel({
-  repositoryPath
+  repositoryPath,
+  selectedBranchName,
+  onSelectBranch
 }: BranchesPanelProps) {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -56,16 +60,33 @@ export function BranchesPanel({
         <div className={styles.branchList}>
           {orderedBranches.map((branch) => {
             const isActive = branch.isCurrent;
+            const isSelected = branch.name === selectedBranchName;
+            const itemClassName =
+              isSelected && isActive
+                ? styles.branchItemSelectedActive
+                : isSelected
+                  ? styles.branchItemSelected
+                  : isActive
+                    ? styles.branchItemActive
+                    : styles.branchItem;
+            const nameClassName =
+              isSelected && isActive
+                ? styles.branchNameSelectedActive
+                : isSelected
+                  ? styles.branchNameSelected
+                  : isActive
+                    ? styles.branchNameActive
+                    : styles.branchName;
 
             return (
-              <div
+              <button
                 key={branch.fullRef}
-                className={isActive ? styles.branchItemActive : styles.branchItem}
+                className={itemClassName}
+                onClick={() => onSelectBranch(branch)}
+                type="button"
               >
-                <span className={isActive ? styles.branchNameActive : styles.branchName}>
-                  {branch.name}
-                </span>
-              </div>
+                <span className={nameClassName}>{branch.name}</span>
+              </button>
             );
           })}
         </div>

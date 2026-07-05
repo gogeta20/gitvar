@@ -9,6 +9,9 @@ import styles from "./CommitGraphPanel.module.css";
 interface CommitGraphRowProps {
   commit: GraphCommit;
   graphWidth: number;
+  selectedBranchName: string | null;
+  isBranchRefSelected: boolean;
+  isBranchTarget: boolean;
   isSelected: boolean;
   onSelect: () => void;
 }
@@ -27,15 +30,27 @@ function formatDateLabel(input: string): string {
 export function CommitGraphRow({
   commit,
   graphWidth,
+  selectedBranchName,
+  isBranchRefSelected,
+  isBranchTarget,
   isSelected,
   onSelect
 }: CommitGraphRowProps) {
   const laneColor = resolveLaneColor(commit.lane);
-  const { primary, otherRefs, isCurrentBranch } = resolveCommitRefs(commit.refs);
+  const { primary, otherRefs, isCurrentBranch } = resolveCommitRefs(
+    commit.refs,
+    selectedBranchName
+  );
 
   return (
     <button
-      className={isSelected ? styles.commitRowActive : styles.commitRow}
+      className={
+        isSelected
+          ? styles.commitRowActive
+          : isBranchTarget
+            ? styles.commitRowBranchTarget
+            : styles.commitRow
+      }
       onClick={onSelect}
       style={{ "--lane-color": laneColor } as CSSProperties}
       type="button"
@@ -43,7 +58,13 @@ export function CommitGraphRow({
       <div className={styles.refsCell}>
         {primary ? (
           <span
-            className={isCurrentBranch ? styles.refTextCurrent : styles.refText}
+            className={
+              isBranchRefSelected
+                ? styles.refTextSelected
+                : isCurrentBranch
+                  ? styles.refTextCurrent
+                  : styles.refText
+            }
             title={primary}
           >
             {primary}

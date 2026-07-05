@@ -1,4 +1,5 @@
 import { BranchesPanel } from "@modules/branches/ui/BranchesPanel";
+import { Branch } from "@modules/branches/domain/branch";
 import { CommitGraphPanel } from "@modules/graph/ui/CommitGraphPanel";
 import { GraphCommit } from "@modules/graph/domain/commit";
 import { useEffect, useMemo, useState } from "react";
@@ -23,6 +24,7 @@ export function RepositoryWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [graphCommits, setGraphCommits] = useState<GraphCommit[]>([]);
   const [selectedCommitId, setSelectedCommitId] = useState<string | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
 
   useEffect(() => {
     const repositoryReader = createRepositoryReader();
@@ -40,6 +42,11 @@ export function RepositoryWorkspace({
         );
       });
   }, [initialRepositoryId]);
+
+  useEffect(() => {
+    setSelectedBranch(null);
+    setSelectedCommitId(null);
+  }, [selectedRepositoryId]);
 
   const selectedRepository = useMemo<RepositorySummary | null>(() => {
     if (!workspace || !selectedRepositoryId) {
@@ -67,28 +74,28 @@ export function RepositoryWorkspace({
     return <InfoCard title="Repository workspace">Loading workspace...</InfoCard>;
   }
 
+  function handleSelectBranch(branch: Branch) {
+    setSelectedBranch(branch);
+    setSelectedCommitId(branch.targetCommit);
+  }
+
   return (
     <section className={styles.workspace}>
       <aside className={styles.sidebar}>
-        <BranchesPanel repositoryPath={selectedRepository.path} />
+        <BranchesPanel
+          onSelectBranch={handleSelectBranch}
+          repositoryPath={selectedRepository.path}
+          selectedBranchName={selectedBranch?.name ?? null}
+        />
       </aside>
 
       <div className={styles.historyColumn}>
-        <div className={styles.historyIntro}>
-          <div>
-            <p className={styles.historyLabel}>Focused repository</p>
-            <h2 className={styles.historyTitle}>{selectedRepository.name}</h2>
-          </div>
-          <div className={styles.historyStats}>
-            <span>Real commit graph</span>
-            <span>Mock details for now</span>
-          </div>
-        </div>
-
         <CommitGraphPanel
           onCommitsLoaded={setGraphCommits}
           onSelectCommit={setSelectedCommitId}
           repositoryPath={selectedRepository.path}
+          selectedBranchName={selectedBranch?.name ?? null}
+          selectedBranchTargetCommit={selectedBranch?.targetCommit ?? null}
           selectedCommitId={selectedCommitId}
         />
       </div>

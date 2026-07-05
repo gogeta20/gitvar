@@ -4,12 +4,38 @@
 }
 
 .branchItem,
-.branchItemActive {
-  padding: 1px 0;
+.branchItemActive,
+.branchItemSelected,
+.branchItemSelectedActive {
+  width: 100%;
+  padding: 3px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.branchItem:hover,
+.branchItemActive:hover,
+.branchItemSelected:hover,
+.branchItemSelectedActive:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.branchItemSelected {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.branchItemSelectedActive {
+  background: color-mix(in srgb, var(--color-text-accent) 16%, transparent);
 }
 
 .branchName,
-.branchNameActive {
+.branchNameActive,
+.branchNameSelected,
+.branchNameSelectedActive {
   display: block;
   min-width: 0;
   font-size: 12px;
@@ -23,6 +49,16 @@
 
 .branchNameActive {
   color: var(--color-text-accent);
+}
+
+.branchNameSelected {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.branchNameSelectedActive {
+  color: var(--color-text-accent);
+  font-weight: 700;
 }
 
 .empty {
