@@ -76,3 +76,7 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El segundo punto de conexion real entre frontend y backend es el panel central del commit graph.
 - El primer render del grafo usa un layout simple propio con SVG por filas y calculo de lanes en frontend.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-04-commit-graph-real.md`.
+- El trabajo actual se centra en definir un `GraphView v1` que deje atras la idea de tabla y convierta el panel central en una vista de grafo dedicada.
+- El estado exacto de cierre y el punto de reanudacion se documentan en `docs/sesiones/2026-07-05-cierre-grafo-v1.md`.
+- El layout engine del grafo se reescribio con el algoritmo clasico de columnas (el mismo principio que `git log --graph`), reemplazando la logica incremental que dejaba lanes fantasma tras un fork.
+- El detalle del diagnostico y la solucion se documenta en `docs/sesiones/2026-07-05-layout-engine-clasico.md`.

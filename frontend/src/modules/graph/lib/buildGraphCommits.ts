@@ -1,72 +1,61 @@
 import { Commit, GraphCommit } from "@modules/graph/domain/commit";
 
+/**
+ * Layout basado en el algoritmo clasico de `git log --graph`: cada commit
+ * reclama una columna, los padres heredan o reclaman columnas propias, y
+ * cuando varias columnas esperan al mismo commit convergen en una sola.
+ */
 export function buildGraphCommits(commits: Commit[]): GraphCommit[] {
-  const activeLanes: Array<string | null> = [];
+  const columns: Array<string | null> = [];
+
+  function claimColumn(): number {
+    const freeIndex = columns.findIndex((value) => value === null);
+
+    if (freeIndex !== -1) {
+      return freeIndex;
+    }
+
+    columns.push(null);
+    return columns.length - 1;
+  }
 
   return commits.map((commit) => {
-    const incomingLanes = activeLanes
+    const activeColumnsBefore = columns
       .map((value, index) => (value !== null ? index : -1))
       .filter((index) => index >= 0);
 
-    let lane = activeLanes.findIndex((value) => value === commit.id);
+    const matchingColumns = columns
+      .map((value, index) => (value === commit.id ? index : -1))
+      .filter((index) => index >= 0);
 
-    if (lane === -1) {
-      lane = activeLanes.findIndex((value) => value === null);
-    }
+    const isBranchTip = matchingColumns.length === 0;
+    const lane = isBranchTip ? claimColumn() : matchingColumns[0];
+    const convergingLanes = matchingColumns.filter((column) => column !== lane);
 
-    if (lane === -1) {
-      lane = activeLanes.length;
-    }
-
-    while (activeLanes.length <= lane) {
-      activeLanes.push(null);
-    }
-
-    activeLanes[lane] = commit.id;
-
-    const nextLanes = [...activeLanes];
-    nextLanes[lane] = null;
-
-    const parentLanes = commit.parents.map((parentId, index) => {
-      if (index === 0) {
-        nextLanes[lane] = parentId;
-        return lane;
-      }
-
-      let parentLane = nextLanes.findIndex((value) => value === parentId);
-
-      if (parentLane === -1) {
-        parentLane = nextLanes.findIndex((value) => value === null);
-      }
-
-      if (parentLane === -1) {
-        parentLane = nextLanes.length;
-      }
-
-      while (nextLanes.length <= parentLane) {
-        nextLanes.push(null);
-      }
-
-      nextLanes[parentLane] = parentId;
-      return parentLane;
+    matchingColumns.forEach((column) => {
+      columns[column] = null;
     });
 
-    const outgoingLanes = nextLanes
-      .map((value, index) => (value !== null ? index : -1))
-      .filter((index) => index >= 0);
+    const parentLanes = commit.parents.map((parentId, index) => {
+      const column = index === 0 ? lane : claimColumn();
+      columns[column] = parentId;
+      return column;
+    });
+
+    const passthroughLanes = activeColumnsBefore.filter(
+      (column) => column !== lane && !convergingLanes.includes(column)
+    );
 
     const laneCount = Math.max(
-      incomingLanes.length > 0 ? Math.max(...incomingLanes) + 1 : 0,
-      outgoingLanes.length > 0 ? Math.max(...outgoingLanes) + 1 : 0,
       lane + 1,
-      parentLanes.length > 0 ? Math.max(...parentLanes) + 1 : 0,
+      ...convergingLanes.map((column) => column + 1),
+      ...parentLanes.map((column) => column + 1),
+      ...passthroughLanes.map((column) => column + 1),
       1
     );
 
-    activeLanes.splice(0, activeLanes.length, ...nextLanes);
-
-    while (activeLanes.length > 0 && activeLanes[activeLanes.length - 1] === null) {
-      activeLanes.pop();
+    while (columns.length > 0 && columns[columns.length - 1] === null) {
+      columns.pop();
     }
 
     return {
@@ -74,8 +63,9 @@ export function buildGraphCommits(commits: Commit[]): GraphCommit[] {
       shortId: commit.id.slice(0, 7),
       lane,
       parentLanes,
-      incomingLanes,
-      outgoingLanes,
+      convergingLanes,
+      passthroughLanes,
+      isBranchTip,
       laneCount
     };
   });

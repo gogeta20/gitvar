@@ -5,18 +5,17 @@
 
 .commitRow,
 .commitRowActive {
-  display: grid;
-  grid-template-columns: minmax(240px, 320px) 76px minmax(0, 1fr) 140px 132px;
-  gap: var(--space-3);
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
   width: 100%;
   border: 0;
-  border-bottom: 1px solid var(--color-border-default);
   border-radius: 0;
   background: transparent;
   color: inherit;
   text-align: left;
   cursor: pointer;
-  padding: 8px 0;
+  padding: 3px 0;
   transition: background 140ms ease;
 }
 
@@ -30,34 +29,43 @@
 }
 
 .graphSvg {
-  width: 100%;
+  width: 88px;
+  min-width: 88px;
   height: 46px;
   overflow: visible;
+}
+
+.contentCell {
+  min-width: 0;
+  flex: 1;
+}
+
+.mainRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
 }
 
 .graphLine,
 .graphPath {
   fill: none;
   stroke-linecap: round;
-  stroke-width: 2.4;
-  opacity: 0.7;
+  stroke-width: 2.2;
+  opacity: 0.9;
 }
 
 .graphDot {
   stroke: var(--color-bg-elevated);
-  stroke-width: 4;
-}
-
-.refCell,
-.messageCell,
-.authorCell,
-.dateCell {
-  min-width: 0;
+  stroke-width: 3;
 }
 
 .messageCell {
-  display: grid;
-  gap: 2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .messageCell strong {
@@ -67,7 +75,6 @@
   font-size: 14px;
 }
 
-.shortId,
 .authorCell,
 .dateCell,
 .empty,
@@ -75,62 +82,49 @@
   color: var(--color-text-secondary);
 }
 
-.shortId,
 .authorCell,
 .dateCell {
   font-size: 13px;
+  white-space: nowrap;
 }
 
-.refList {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 100%;
-}
-
-.refTag {
-  border-radius: var(--radius-pill);
-  padding: 3px 8px;
-  background: var(--color-badge-accent);
-  color: var(--color-badge-accent-text);
+.refText {
+  color: var(--color-text-accent);
   font-size: 11px;
+  line-height: 1.15;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
-.refPlaceholder {
-  color: var(--color-text-muted);
-  font-size: 13px;
-}
-
-.authorCell,
-.dateCell {
+.metaRow {
   display: flex;
   align-items: center;
+  gap: var(--space-4);
+  flex-shrink: 0;
 }
 
 .error {
   margin: 0;
 }
 
-.commitList > :last-child {
-  border-bottom: 0;
-}
-
 @media (max-width: 900px) {
   .commitRow,
   .commitRowActive {
-    grid-template-columns: 64px minmax(0, 1fr);
+    align-items: start;
   }
 
-  .refCell,
-  .authorCell,
-  .dateCell {
-    display: none;
+  .mainRow {
+    align-items: start;
+    flex-direction: column;
   }
 
-  .messageCell strong {
-    white-space: normal;
+  .messageCell {
+    flex-wrap: wrap;
+  }
+
+  .metaRow {
+    gap: var(--space-3);
+    flex-wrap: wrap;
   }
 }

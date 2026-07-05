@@ -13,7 +13,7 @@ interface CommitGraphPanelProps {
   onCommitsLoaded?: (commits: GraphCommit[]) => void;
 }
 
-const LANE_WIDTH = 22;
+const LANE_WIDTH = 28;
 const ROW_HEIGHT = 46;
 const SVG_PADDING_X = 10;
 const DOT_RADIUS = 5;
@@ -55,21 +55,36 @@ function buildConnectorPath(
   return `M ${startX} ${midY} C ${startX} ${controlY} ${bendX} ${controlY} ${endX} ${endY}`;
 }
 
+function buildIncomingConnectorPath(
+  fromLane: number,
+  toLane: number,
+  width: number
+): string {
+  const startX = SVG_PADDING_X + fromLane * LANE_WIDTH;
+  const endX = SVG_PADDING_X + toLane * LANE_WIDTH;
+  const startY = 0;
+  const midY = ROW_HEIGHT * 0.18;
+  const endY = ROW_HEIGHT * 0.5;
+  const bendX = Math.max(DOT_RADIUS, Math.min(width - DOT_RADIUS, startX));
+
+  return `M ${startX} ${startY} C ${bendX} ${midY} ${endX} ${midY} ${endX} ${endY}`;
+}
+
 function resolveLaneColor(lane: number): string {
   return LANE_COLORS[lane % LANE_COLORS.length];
 }
 
 function GraphRow({
   commit,
+  graphWidth,
   isSelected,
   onSelect
 }: {
   commit: GraphCommit;
+  graphWidth: number;
   isSelected: boolean;
   onSelect: () => void;
 }) {
-  const laneCount = commit.laneCount;
-  const graphWidth = SVG_PADDING_X * 2 + Math.max(1, laneCount - 1) * LANE_WIDTH + 2;
   const dotX = SVG_PADDING_X + commit.lane * LANE_WIDTH;
   const dotY = ROW_HEIGHT * 0.5;
 
@@ -84,43 +99,58 @@ function GraphRow({
         viewBox={`0 0 ${graphWidth} ${ROW_HEIGHT}`}
         preserveAspectRatio="none"
       >
-        {commit.incomingLanes.map((lane) => {
+        {commit.passthroughLanes.map((lane) => {
           const x = SVG_PADDING_X + lane * LANE_WIDTH;
 
           return (
             <line
-              key={`incoming-${commit.id}-${lane}`}
+              key={`passthrough-${commit.id}-${lane}`}
               className={styles.graphLine}
               style={{ stroke: resolveLaneColor(lane) }}
               x1={x}
               x2={x}
               y1="0"
-              y2={dotY}
-            />
-          );
-        })}
-
-        {commit.outgoingLanes.map((lane) => {
-          const x = SVG_PADDING_X + lane * LANE_WIDTH;
-
-          return (
-            <line
-              key={`outgoing-${commit.id}-${lane}`}
-              className={styles.graphLine}
-              style={{ stroke: resolveLaneColor(lane) }}
-              x1={x}
-              x2={x}
-              y1={dotY}
               y2={ROW_HEIGHT}
             />
           );
         })}
 
+        {!commit.isBranchTip ? (
+          <line
+            className={styles.graphLine}
+            style={{ stroke: resolveLaneColor(commit.lane) }}
+            x1={dotX}
+            x2={dotX}
+            y1="0"
+            y2={dotY}
+          />
+        ) : null}
+
+        {commit.convergingLanes.map((lane) => (
+          <path
+            key={`converge-${commit.id}-${lane}`}
+            className={styles.graphPath}
+            style={{ stroke: resolveLaneColor(lane) }}
+            d={buildIncomingConnectorPath(lane, commit.lane, graphWidth)}
+          />
+        ))}
+
+        {commit.parents.length > 0 ? (
+          <line
+            className={styles.graphLine}
+            style={{ stroke: resolveLaneColor(commit.lane) }}
+            x1={dotX}
+            x2={dotX}
+            y1={dotY}
+            y2={ROW_HEIGHT}
+          />
+        ) : null}
+
         {commit.parentLanes
           .filter((lane) => lane !== commit.lane)
           .map((lane, index) => (
           <path
-            key={`parent-${commit.id}-${lane}-${index}`}
+            key={`split-${commit.id}-${lane}-${index}`}
             className={styles.graphPath}
             style={{ stroke: resolveLaneColor(lane) }}
             d={buildConnectorPath(commit.lane, lane, graphWidth)}
@@ -136,27 +166,25 @@ function GraphRow({
         />
       </svg>
 
-      <div className={styles.refCell}>
-        <div className={styles.refList}>
-          {commit.refs.length > 0 ? (
-            commit.refs.map((ref) => (
-              <span key={ref} className={styles.refTag}>
-                {ref}
-              </span>
-            ))
-          ) : (
-            <span className={styles.refPlaceholder}>-</span>
-          )}
+      <div className={styles.contentCell}>
+        <div className={styles.mainRow}>
+          <div className={styles.messageCell}>
+            <strong>{commit.message}</strong>
+            {commit.refs.length > 0 ? (
+              commit.refs.map((ref) => (
+                <span key={ref} className={styles.refText}>
+                  {ref}
+                </span>
+              ))
+            ) : null}
+          </div>
+
+          <div className={styles.metaRow}>
+            <span className={styles.authorCell}>{commit.authorName}</span>
+            <span className={styles.dateCell}>{formatDateLabel(commit.authoredAt)}</span>
+          </div>
         </div>
       </div>
-
-      <div className={styles.messageCell}>
-        <strong>{commit.message}</strong>
-        <span className={styles.shortId}>{commit.shortId}</span>
-      </div>
-
-      <div className={styles.authorCell}>{commit.authorName}</div>
-      <div className={styles.dateCell}>{formatDateLabel(commit.authoredAt)}</div>
     </button>
   );
 }
@@ -187,6 +215,15 @@ export function CommitGraphPanel({
 
   const graphCommits = useMemo(() => buildGraphCommits(commits), [commits]);
 
+  const graphWidth = useMemo(() => {
+    const maxLaneCount = graphCommits.reduce(
+      (max, commit) => Math.max(max, commit.laneCount),
+      1
+    );
+
+    return SVG_PADDING_X * 2 + Math.max(1, maxLaneCount - 1) * LANE_WIDTH + 2;
+  }, [graphCommits]);
+
   useEffect(() => {
     onCommitsLoaded?.(graphCommits);
   }, [graphCommits, onCommitsLoaded]);
@@ -207,6 +244,7 @@ export function CommitGraphPanel({
             <GraphRow
               key={commit.id}
               commit={commit}
+              graphWidth={graphWidth}
               isSelected={commit.id === selectedCommitId}
               onSelect={() => onSelectCommit(commit.id)}
             />
