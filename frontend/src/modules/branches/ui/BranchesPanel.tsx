@@ -7,12 +7,10 @@ import styles from "./BranchesPanel.module.css";
 
 interface BranchesPanelProps {
   repositoryPath: string;
-  activeBranchName: string;
 }
 
 export function BranchesPanel({
-  repositoryPath,
-  activeBranchName
+  repositoryPath
 }: BranchesPanelProps) {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -33,19 +31,12 @@ export function BranchesPanel({
   }, [repositoryPath]);
 
   const orderedBranches = useMemo(() => {
-    const isActiveBranch = (branch: Branch) =>
-      branch.name === activeBranchName ||
-      branch.name.endsWith(`/${activeBranchName}`);
-
     return [...branches].sort((left, right) => {
-      const leftActive = isActiveBranch(left);
-      const rightActive = isActiveBranch(right);
-
-      if (leftActive && !rightActive) {
+      if (left.isCurrent && !right.isCurrent) {
         return -1;
       }
 
-      if (!leftActive && rightActive) {
+      if (!left.isCurrent && right.isCurrent) {
         return 1;
       }
 
@@ -55,7 +46,7 @@ export function BranchesPanel({
 
       return left.name.localeCompare(right.name);
     });
-  }, [activeBranchName, branches]);
+  }, [branches]);
 
   return (
     <InfoCard title="Branches">
@@ -64,9 +55,7 @@ export function BranchesPanel({
       {!error ? (
         <div className={styles.branchList}>
           {orderedBranches.map((branch) => {
-            const isActive =
-              branch.name === activeBranchName ||
-              branch.name.endsWith(`/${activeBranchName}`);
+            const isActive = branch.isCurrent;
 
             return (
               <div
