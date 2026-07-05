@@ -131,7 +131,6 @@
   font-weight: 400;
 }
 
-.authorCell,
 .dateCell,
 .empty,
 .error {
@@ -149,6 +148,8 @@
   max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--color-text-accent);
+  font-weight: 500;
 }
 
 .dateCell {
@@ -156,17 +157,27 @@
   text-align: right;
 }
 
-.refText {
+.refText,
+.refTextCurrent {
   display: inline-block;
   max-width: 240px;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--lane-color);
   font-size: 11px;
   line-height: 1.15;
   letter-spacing: 0.01em;
   white-space: nowrap;
-  padding: 2px 0;
+  padding: 0 7px;
+}
+
+.refText {
+  color: var(--lane-color);
+}
+
+.refTextCurrent {
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
 .refCountBadge {

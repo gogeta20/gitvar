@@ -1,6 +1,6 @@
 :root {
   color-scheme: dark;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
 
   --color-bg-app: #111827;
   --color-bg-elevated: #0f172a;

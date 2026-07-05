@@ -96,3 +96,5 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-tabla-oscura-y-hover.md`.
 - El panel de `Branches` ya usa el flag `isCurrent` real (calculado por git) en vez de comparar strings contra un dato mockeado, asi que marca la rama activa correctamente sin importar en cual se este parado.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-fix-branches-panel-develop.md`.
+- La tipografia de toda la app paso a JetBrains Mono (empaquetada con `@fontsource`, sin dependencia de internet), y el nombre del autor en las filas del `History map` tiene su propio color de acento.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-tipografia-jetbrains-mono.md`.

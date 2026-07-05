@@ -3,6 +3,7 @@ const HEAD_PREFIX = "HEAD -> ";
 export interface ResolvedCommitRefs {
   primary: string | null;
   otherRefs: string[];
+  isCurrentBranch: boolean;
 }
 
 /**
@@ -12,7 +13,7 @@ export interface ResolvedCommitRefs {
  */
 export function resolveCommitRefs(refs: string[]): ResolvedCommitRefs {
   if (refs.length === 0) {
-    return { primary: null, otherRefs: [] };
+    return { primary: null, otherRefs: [], isCurrentBranch: false };
   }
 
   const headRef = refs.find((ref) => ref.startsWith(HEAD_PREFIX));
@@ -20,5 +21,5 @@ export function resolveCommitRefs(refs: string[]): ResolvedCommitRefs {
   const primary = headRef ? headRef.slice(HEAD_PREFIX.length) : primaryRaw;
   const otherRefs = refs.filter((ref) => ref !== primaryRaw);
 
-  return { primary, otherRefs };
+  return { primary, otherRefs, isCurrentBranch: Boolean(headRef) };
 }

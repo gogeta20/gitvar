@@ -31,7 +31,7 @@ export function CommitGraphRow({
   onSelect
 }: CommitGraphRowProps) {
   const laneColor = resolveLaneColor(commit.lane);
-  const { primary, otherRefs } = resolveCommitRefs(commit.refs);
+  const { primary, otherRefs, isCurrentBranch } = resolveCommitRefs(commit.refs);
 
   return (
     <button
@@ -42,7 +42,10 @@ export function CommitGraphRow({
     >
       <div className={styles.refsCell}>
         {primary ? (
-          <span className={styles.refText} title={primary}>
+          <span
+            className={isCurrentBranch ? styles.refTextCurrent : styles.refText}
+            title={primary}
+          >
             {primary}
           </span>
         ) : null}
