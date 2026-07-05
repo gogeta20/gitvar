@@ -49,6 +49,11 @@ export function CommitGraphRow({
 
       <div className={styles.graphCell}>
         <CommitGraphSvg commit={commit} graphWidth={graphWidth} />
+        {commit.childCount > 1 ? (
+          <span className={styles.divergenceBadge} title={`${commit.childCount} branches diverge here`}>
+            {commit.childCount}
+          </span>
+        ) : null}
       </div>
 
       <div className={styles.contentCell}>

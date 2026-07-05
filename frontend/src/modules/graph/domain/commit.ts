@@ -16,5 +16,6 @@ export interface GraphCommit extends Commit {
   convergingLanes: number[];
   passthroughLanes: number[];
   isBranchTip: boolean;
+  childCount: number;
   laneCount: number;
 }

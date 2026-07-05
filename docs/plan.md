@@ -84,3 +84,5 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El detalle del diagnostico y la solucion se documenta en `docs/sesiones/2026-07-05-layout-engine-clasico.md`.
 - El grafo ahora reconoce cuando el working tree tiene cambios sin commitear: un nuevo endpoint `/api/status` expone `isDirty` y `headCommitId`, y el frontend antepone un commit sintetico "Uncommitted changes" al layout engine, visualmente distinto (punto hueco, linea punteada).
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-nodo-working-changes.md`.
+- Los commits que son punto de origen de varias ramas muestran un badge con la cantidad de ramas que divergen desde ahi, calculado en el frontend a partir del propio layout engine.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-badge-divergencia-ramas.md`.

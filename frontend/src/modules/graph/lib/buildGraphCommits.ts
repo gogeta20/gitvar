@@ -31,6 +31,7 @@ export function buildGraphCommits(commits: Commit[]): GraphCommit[] {
     const isBranchTip = matchingColumns.length === 0;
     const lane = isBranchTip ? claimColumn() : matchingColumns[0];
     const convergingLanes = matchingColumns.filter((column) => column !== lane);
+    const childCount = matchingColumns.length;
 
     matchingColumns.forEach((column) => {
       columns[column] = null;
@@ -66,6 +67,7 @@ export function buildGraphCommits(commits: Commit[]): GraphCommit[] {
       convergingLanes,
       passthroughLanes,
       isBranchTip,
+      childCount,
       laneCount
     };
   });
