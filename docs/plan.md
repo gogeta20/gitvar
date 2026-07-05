@@ -110,3 +110,5 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-commit-detail-mock.md`.
 - El panel de detalle de commit ahora es redimensionable arrastrando un divisor, con el ancho persistido en `localStorage`. La logica vive en un hook reutilizable (`useResizableWidth`) pensado para aplicarse tambien al sidebar izquierdo mas adelante.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-panel-redimensionable.md`.
+- Se integraron a `develop` (con merges `--no-ff` a proposito) tres ramas que habian divergido en paralelo desde el mismo punto, provocando la primera convergencia real de multiples ramas visible en el `History map`.
+- El detalle de esta fase, incluyendo el conflicto real resuelto en `RepositoryWorkspace.tsx`, se documenta en `docs/sesiones/2026-07-05-convergencia-real-develop.md`.
