@@ -5,9 +5,10 @@
 
 .commitRow,
 .commitRowActive {
-  display: flex;
-  align-items: stretch;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
   width: 100%;
   border: 0;
   border-radius: 0;
@@ -15,7 +16,7 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
-  padding: 3px 0;
+  padding: 2px 0;
   transition: background 140ms ease;
 }
 
@@ -33,18 +34,49 @@
   min-width: 88px;
   height: 46px;
   overflow: visible;
+  display: block;
+}
+
+.refsCell {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
+  padding-right: 4px;
+  overflow: hidden;
+}
+
+.graphCell {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid color-mix(in srgb, var(--lane-color) 50%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--lane-color) 35%, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--lane-color) 8%, transparent),
+    color-mix(in srgb, var(--lane-color) 16%, transparent) 45%,
+    color-mix(in srgb, var(--lane-color) 8%, transparent)
+  );
 }
 
 .contentCell {
   min-width: 0;
   flex: 1;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
 }
 
 .mainRow {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: 12px;
   min-width: 0;
+  width: 100%;
 }
 
 .graphLine,
@@ -63,7 +95,6 @@
 .messageCell {
   display: flex;
   align-items: center;
-  gap: 10px;
   min-width: 0;
   flex: 1 1 auto;
 }
@@ -92,22 +123,32 @@
 .dateCell {
   font-size: 13px;
   white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.authorCell {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dateCell {
+  margin-left: auto;
+  text-align: right;
 }
 
 .refText {
+  display: inline-block;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--color-text-accent);
   font-size: 11px;
   line-height: 1.15;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   white-space: nowrap;
-}
-
-.metaRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  flex-shrink: 0;
+  padding: 2px 0;
 }
 
 .error {
@@ -117,7 +158,9 @@
 @media (max-width: 900px) {
   .commitRow,
   .commitRowActive {
+    grid-template-columns: 1fr;
     align-items: start;
+    row-gap: 6px;
   }
 
   .mainRow {
@@ -125,12 +168,19 @@
     flex-direction: column;
   }
 
-  .messageCell {
-    flex-wrap: wrap;
+  .refsCell {
+    justify-content: flex-start;
+    min-height: auto;
+    padding-right: 0;
   }
 
-  .metaRow {
-    gap: var(--space-3);
-    flex-wrap: wrap;
+  .graphCell {
+    justify-content: flex-start;
+    width: fit-content;
+  }
+
+  .dateCell {
+    margin-left: 0;
+    text-align: left;
   }
 }
