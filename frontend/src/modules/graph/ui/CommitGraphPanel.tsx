@@ -9,6 +9,7 @@ import { createStatusReader } from "@modules/graph/infrastructure/StatusReaderPr
 import { buildGraphCommits } from "@modules/graph/lib/buildGraphCommits";
 import { calculateGraphWidth } from "@modules/graph/render/graphRenderConfig";
 import { CommitGraphRow } from "@modules/graph/ui/CommitGraphRow";
+import { HistoryMapOptionsMenu } from "@modules/graph/ui/HistoryMapOptionsMenu";
 import styles from "./CommitGraphPanel.module.css";
 
 interface CommitGraphPanelProps {
@@ -31,6 +32,9 @@ export function CommitGraphPanel({
   const [commits, setCommits] = useState<Commit[]>([]);
   const [workingStatus, setWorkingStatus] = useState<WorkingStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showAuthor, setShowAuthor] = useState(true);
+  const [showDate, setShowDate] = useState(true);
+  const [showMessage, setShowMessage] = useState(true);
 
   useEffect(() => {
     const commitReader = createCommitReader();
@@ -102,7 +106,18 @@ export function CommitGraphPanel({
   }, [graphCommits, onSelectCommit, selectedCommitId]);
 
   return (
-    <InfoCard>
+    <InfoCard
+      headerActions={
+        <HistoryMapOptionsMenu
+          onToggleAuthor={() => setShowAuthor((current) => !current)}
+          onToggleDate={() => setShowDate((current) => !current)}
+          onToggleMessage={() => setShowMessage((current) => !current)}
+          showAuthor={showAuthor}
+          showDate={showDate}
+          showMessage={showMessage}
+        />
+      }
+    >
       {error ? <p className={styles.error}>{error}</p> : null}
 
       {!error ? (
@@ -113,6 +128,9 @@ export function CommitGraphPanel({
               commit={commit}
               graphWidth={graphWidth}
               selectedBranchName={selectedBranchName}
+              showAuthor={showAuthor}
+              showDate={showDate}
+              showMessage={showMessage}
               isBranchRefSelected={Boolean(
                 selectedBranchName &&
                   commit.refs.some(

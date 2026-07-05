@@ -11,7 +11,7 @@
 .commitRowActive,
 .commitRowBranchTarget {
   display: grid;
-  grid-template-columns: minmax(180px, 240px) auto minmax(0, 1fr);
+  grid-template-columns: minmax(180px, 320px) auto minmax(0, 1fr);
   align-items: center;
   column-gap: 12px;
   width: 100%;
@@ -23,6 +23,10 @@
   cursor: pointer;
   padding: 0;
   transition: background 140ms ease, border-color 140ms ease;
+}
+
+.commitRowCollapsedContent {
+  grid-template-columns: minmax(180px, 1fr) auto;
 }
 
 .commitRow:hover,
@@ -167,7 +171,7 @@
 .refTextCurrent,
 .refTextSelected {
   display: inline-block;
-  max-width: 240px;
+  max-width: 320px;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 11px;
