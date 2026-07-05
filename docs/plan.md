@@ -94,3 +94,5 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-polish-visual-grafo.md`.
 - La tabla del `History map` tiene su propio fondo oscuro (`--color-bg-elevated`) independiente de la card translucida que comparten los demas paneles, con hover y seleccion de fila mas visibles.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-tabla-oscura-y-hover.md`.
+- El panel de `Branches` ya usa el flag `isCurrent` real (calculado por git) en vez de comparar strings contra un dato mockeado, asi que marca la rama activa correctamente sin importar en cual se este parado.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-fix-branches-panel-develop.md`.
