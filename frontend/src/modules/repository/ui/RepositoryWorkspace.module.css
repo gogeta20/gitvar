@@ -1,6 +1,5 @@
 .workspace {
   display: grid;
-  gap: var(--space-6);
   grid-template-columns: minmax(160px, max-content) minmax(0, 1fr) 10px auto;
 }
 
