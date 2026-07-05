@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { Tooltip } from "@core/components/Tooltip";
 import { GraphCommit } from "@modules/graph/domain/commit";
 import { resolveCommitRefs } from "@modules/graph/lib/resolveCommitRefs";
 import { resolveLaneColor } from "@modules/graph/render/graphRenderConfig";
@@ -46,12 +47,9 @@ export function CommitGraphRow({
           </span>
         ) : null}
         {otherRefs.length > 0 ? (
-          <span
-            className={styles.refCountBadge}
-            title={`Also here: ${otherRefs.join(", ")}`}
-          >
-            +{otherRefs.length}
-          </span>
+          <Tooltip items={otherRefs}>
+            <span className={styles.refCountBadge}>+{otherRefs.length}</span>
+          </Tooltip>
         ) : null}
       </div>
 
