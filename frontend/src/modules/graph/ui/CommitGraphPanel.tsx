@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { InfoCard } from "@core/components/InfoCard";
 import { readCommits } from "@modules/graph/application/use-cases/readCommits";
+import { readStatus } from "@modules/graph/application/use-cases/readStatus";
 import { Commit, GraphCommit } from "@modules/graph/domain/commit";
+import { WorkingStatus, WORKING_CHANGES_COMMIT_ID } from "@modules/graph/domain/workingStatus";
 import { createCommitReader } from "@modules/graph/infrastructure/CommitReaderProvider";
+import { createStatusReader } from "@modules/graph/infrastructure/StatusReaderProvider";
 import { buildGraphCommits } from "@modules/graph/lib/buildGraphCommits";
 import { calculateGraphWidth } from "@modules/graph/render/graphRenderConfig";
 import { CommitGraphRow } from "@modules/graph/ui/CommitGraphRow";
@@ -22,24 +25,55 @@ export function CommitGraphPanel({
   onCommitsLoaded
 }: CommitGraphPanelProps) {
   const [commits, setCommits] = useState<Commit[]>([]);
+  const [workingStatus, setWorkingStatus] = useState<WorkingStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const commitReader = createCommitReader();
+    const statusReader = createStatusReader();
 
     setError(null);
 
-    readCommits(commitReader, repositoryPath)
-      .then(setCommits)
+    Promise.all([
+      readCommits(commitReader, repositoryPath),
+      readStatus(statusReader, repositoryPath)
+    ])
+      .then(([nextCommits, nextStatus]) => {
+        setCommits(nextCommits);
+        setWorkingStatus(nextStatus);
+      })
       .catch((currentError: unknown) => {
         setCommits([]);
+        setWorkingStatus(null);
         setError(
           currentError instanceof Error ? currentError.message : "Unexpected error."
         );
       });
   }, [repositoryPath]);
 
-  const graphCommits = useMemo(() => buildGraphCommits(commits), [commits]);
+  const commitsWithWorkingChanges = useMemo(() => {
+    if (!workingStatus?.isDirty) {
+      return commits;
+    }
+
+    const workingChangesCommit: Commit = {
+      id: WORKING_CHANGES_COMMIT_ID,
+      parents: [workingStatus.headCommitId],
+      refs: [],
+      authorName: "",
+      authorEmail: "",
+      authoredAt: "",
+      message: "Uncommitted changes",
+      isWorkingChanges: true
+    };
+
+    return [workingChangesCommit, ...commits];
+  }, [commits, workingStatus]);
+
+  const graphCommits = useMemo(
+    () => buildGraphCommits(commitsWithWorkingChanges),
+    [commitsWithWorkingChanges]
+  );
 
   const graphWidth = useMemo(() => {
     const maxLaneCount = graphCommits.reduce(
@@ -56,7 +90,10 @@ export function CommitGraphPanel({
 
   useEffect(() => {
     if (graphCommits.length > 0 && !selectedCommitId) {
-      onSelectCommit(graphCommits[0].id);
+      const firstRealCommit =
+        graphCommits.find((commit) => !commit.isWorkingChanges) ?? graphCommits[0];
+
+      onSelectCommit(firstRealCommit.id);
     }
   }, [graphCommits, onSelectCommit, selectedCommitId]);
 

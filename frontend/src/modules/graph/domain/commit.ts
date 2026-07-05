@@ -6,6 +6,7 @@ export interface Commit {
   authorEmail: string;
   authoredAt: string;
   message: string;
+  isWorkingChanges?: boolean;
 }
 
 export interface GraphCommit extends Commit {

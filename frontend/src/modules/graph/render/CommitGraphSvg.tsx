@@ -69,7 +69,10 @@ export function CommitGraphSvg({
       {commit.parents.length > 0 ? (
         <line
           className={styles.graphLine}
-          style={{ stroke: resolveLaneColor(commit.lane) }}
+          style={{
+            stroke: resolveLaneColor(commit.lane),
+            strokeDasharray: commit.isWorkingChanges ? "4 3" : undefined
+          }}
           x1={dotX}
           x2={dotX}
           y1={dotY}
@@ -93,7 +96,11 @@ export function CommitGraphSvg({
         cx={dotX}
         cy={dotY}
         r={GRAPH_DOT_RADIUS}
-        style={{ fill: resolveLaneColor(commit.lane) }}
+        style={
+          commit.isWorkingChanges
+            ? { fill: "transparent", stroke: resolveLaneColor(commit.lane) }
+            : { fill: resolveLaneColor(commit.lane) }
+        }
       />
     </svg>
   );

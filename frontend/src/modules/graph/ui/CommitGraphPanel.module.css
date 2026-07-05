@@ -75,6 +75,12 @@
   font-size: 14px;
 }
 
+.workingChangesMessage {
+  color: var(--color-text-secondary);
+  font-style: italic;
+  font-weight: 400;
+}
+
 .authorCell,
 .dateCell,
 .empty,

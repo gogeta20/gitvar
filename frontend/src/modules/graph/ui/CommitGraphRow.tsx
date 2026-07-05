@@ -37,7 +37,9 @@ export function CommitGraphRow({
       <div className={styles.contentCell}>
         <div className={styles.mainRow}>
           <div className={styles.messageCell}>
-            <strong>{commit.message}</strong>
+            <strong className={commit.isWorkingChanges ? styles.workingChangesMessage : undefined}>
+              {commit.message}
+            </strong>
             {commit.refs.length > 0
               ? commit.refs.map((ref) => (
                   <span key={ref} className={styles.refText}>
@@ -47,10 +49,12 @@ export function CommitGraphRow({
               : null}
           </div>
 
-          <div className={styles.metaRow}>
-            <span className={styles.authorCell}>{commit.authorName}</span>
-            <span className={styles.dateCell}>{formatDateLabel(commit.authoredAt)}</span>
-          </div>
+          {!commit.isWorkingChanges ? (
+            <div className={styles.metaRow}>
+              <span className={styles.authorCell}>{commit.authorName}</span>
+              <span className={styles.dateCell}>{formatDateLabel(commit.authoredAt)}</span>
+            </div>
+          ) : null}
         </div>
       </div>
     </button>

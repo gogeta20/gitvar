@@ -6,13 +6,17 @@ use crate::app::branches::contracts::BranchReader;
 use crate::app::branches::read_branches::read_branches;
 use crate::app::commits::contracts::CommitReader;
 use crate::app::commits::read_commits::read_commits;
+use crate::app::status::contracts::StatusReader;
+use crate::app::status::read_status::read_status;
 use crate::domain::branch::Branch;
 use crate::domain::commit::Commit;
 use crate::domain::errors::AppError;
+use crate::domain::working_status::WorkingStatus;
 
 pub fn serve(
     branch_reader: &dyn BranchReader,
     commit_reader: &dyn CommitReader,
+    status_reader: &dyn StatusReader,
 ) -> Result<(), AppError> {
     let listener = TcpListener::bind("127.0.0.1:7878")
         .map_err(|error| AppError::IoError(error.to_string()))?;
@@ -32,7 +36,7 @@ pub fn serve(
         }
 
         let request = String::from_utf8_lossy(&buffer[..bytes_read]);
-        let response = route_request(&request, branch_reader, commit_reader);
+        let response = route_request(&request, branch_reader, commit_reader, status_reader);
 
         stream
             .write_all(response.as_bytes())
@@ -46,6 +50,7 @@ fn route_request(
     request: &str,
     branch_reader: &dyn BranchReader,
     commit_reader: &dyn CommitReader,
+    status_reader: &dyn StatusReader,
 ) -> String {
     let Some(first_line) = request.lines().next() else {
         return json_response(400, r#"{"error":"Invalid request."}"#);
@@ -65,6 +70,10 @@ fn route_request(
 
     if target.starts_with("/api/commits") {
         return handle_commit_request(target, commit_reader);
+    }
+
+    if target.starts_with("/api/status") {
+        return handle_status_request(target, status_reader);
     }
 
     json_response(404, r#"{"error":"Not found."}"#)
@@ -91,6 +100,20 @@ fn handle_commit_request(target: &str, commit_reader: &dyn CommitReader) -> Stri
 
     match read_commits(commit_reader, &path) {
         Ok(commits) => json_response(200, &commits_to_json(&commits)),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_status_request(target: &str, status_reader: &dyn StatusReader) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    match read_status(status_reader, &path) {
+        Ok(status) => json_response(200, &status_to_json(&status)),
         Err(error) => json_response(
             500,
             &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
@@ -176,6 +199,19 @@ fn commits_to_json(commits: &[Commit]) -> String {
         .join(",");
 
     format!(r#"{{"commits":[{body}]}}"#)
+}
+
+fn status_to_json(status: &WorkingStatus) -> String {
+    format!(
+        concat!(
+            "{{",
+            r#""isDirty":{},"#,
+            r#""headCommitId":"{}""#,
+            "}}"
+        ),
+        status.is_dirty,
+        escape_json(&status.head_commit_id),
+    )
 }
 
 fn json_response(status_code: u16, body: &str) -> String {

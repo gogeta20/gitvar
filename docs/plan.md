@@ -78,5 +78,9 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-04-commit-graph-real.md`.
 - El trabajo actual se centra en definir un `GraphView v1` que deje atras la idea de tabla y convierta el panel central en una vista de grafo dedicada.
 - El estado exacto de cierre y el punto de reanudacion se documentan en `docs/sesiones/2026-07-05-cierre-grafo-v1.md`.
+- El grafo ya refleja el estado de working tree sucio mediante un nodo sintetico `Uncommitted changes`.
+- Los limites y riesgos conocidos de ese slice se documentan en `docs/sesiones/2026-07-05-nodo-working-changes.md`.
 - El layout engine del grafo se reescribio con el algoritmo clasico de columnas (el mismo principio que `git log --graph`), reemplazando la logica incremental que dejaba lanes fantasma tras un fork.
 - El detalle del diagnostico y la solucion se documenta en `docs/sesiones/2026-07-05-layout-engine-clasico.md`.
+- El grafo ahora reconoce cuando el working tree tiene cambios sin commitear: un nuevo endpoint `/api/status` expone `isDirty` y `headCommitId`, y el frontend antepone un commit sintetico "Uncommitted changes" al layout engine, visualmente distinto (punto hueco, linea punteada).
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-nodo-working-changes.md`.
