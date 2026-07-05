@@ -38,9 +38,12 @@
 .branchNameSelectedActive {
   display: block;
   min-width: 0;
+  max-width: 100%;
   font-size: 12px;
   line-height: 1.4;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .branchName {

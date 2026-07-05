@@ -1,7 +1,7 @@
 .workspace {
   display: grid;
   gap: var(--space-6);
-  grid-template-columns: 292px minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(160px, max-content) minmax(0, 1fr) 320px;
 }
 
 .workspaceSidebarCollapsed {
@@ -220,7 +220,7 @@
 
 @media (max-width: 1180px) {
   .workspace {
-    grid-template-columns: 292px minmax(0, 1fr);
+    grid-template-columns: minmax(160px, max-content) minmax(0, 1fr);
   }
 
   .workspaceSidebarCollapsed {
