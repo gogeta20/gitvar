@@ -1,7 +1,7 @@
 .workspace {
   display: grid;
   gap: var(--space-6);
-  grid-template-columns: 280px minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(160px, max-content) minmax(0, 1fr) 320px;
 }
 
 .sidebar,
@@ -9,47 +9,13 @@
   display: grid;
   gap: var(--space-6);
   align-content: start;
+  min-width: 0;
 }
 
 .historyColumn {
   min-width: 0;
 }
 
-.repositoryList {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.repositoryButton,
-.repositoryButtonActive {
-  width: 100%;
-  border: 1px solid var(--color-border-default);
-  border-radius: 16px;
-  background: var(--color-bg-button);
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 140ms ease, transform 140ms ease, background 140ms ease;
-}
-
-.repositoryButton,
-.repositoryButtonActive {
-  padding: var(--space-4);
-}
-
-.repositoryButton:hover,
-.repositoryButtonActive:hover {
-  transform: translateY(-1px);
-  border-color: var(--color-border-strong);
-}
-
-.repositoryButtonActive {
-  background: var(--color-bg-panel-strong);
-  border-color: var(--color-border-selected);
-}
-
-.repositoryTopline,
-.repositoryMeta,
 .historyStats,
 .detailHeader {
   display: flex;
@@ -57,19 +23,11 @@
   gap: var(--space-4);
 }
 
-.repositoryTopline span,
-.repositoryMeta,
 .commitMeta,
 .historyStats,
 .detailLabel,
 .previewCopy {
   color: var(--color-text-secondary);
-}
-
-.repositoryButton p {
-  margin: var(--space-2) 0 var(--space-3);
-  color: var(--color-text-secondary);
-  font-size: 14px;
 }
 
 .refTag,
@@ -136,7 +94,7 @@
 
 @media (max-width: 1180px) {
   .workspace {
-    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-columns: minmax(160px, max-content) minmax(0, 1fr);
   }
 
   .detailColumn {

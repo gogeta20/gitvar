@@ -98,3 +98,5 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-fix-branches-panel-develop.md`.
 - La tipografia de toda la app paso a JetBrains Mono (empaquetada con `@fontsource`, sin dependencia de internet), y el nombre del autor en las filas del `History map` tiene su propio color de acento.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-tipografia-jetbrains-mono.md`.
+- Se quito el panel de "Repositories" dentro del workspace (redundante con `RepositoryPicker`) y se corrigio un bug de layout donde el sidebar podia desbordar su columna de grid y quedar tapado por el panel del grafo en anchos intermedios.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-fix-sidebar-responsive.md`.

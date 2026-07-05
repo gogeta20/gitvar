@@ -62,14 +62,9 @@ export function BranchesPanel({
                 key={branch.fullRef}
                 className={isActive ? styles.branchItemActive : styles.branchItem}
               >
-                <div className={styles.branchNameRow}>
-                  <span className={styles.branchIcon} aria-hidden="true">
-                    {isActive ? "●" : "○"}
-                  </span>
-                  <span className={isActive ? styles.branchNameActive : styles.branchName}>
-                    {branch.name}
-                  </span>
-                </div>
+                <span className={isActive ? styles.branchNameActive : styles.branchName}>
+                  {branch.name}
+                </span>
               </div>
             );
           })}

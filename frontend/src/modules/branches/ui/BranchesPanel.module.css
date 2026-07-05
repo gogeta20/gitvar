@@ -1,29 +1,20 @@
 .branchList {
   display: grid;
-  gap: var(--space-3);
+  gap: 2px;
 }
 
 .branchItem,
 .branchItemActive {
-  padding: var(--space-2) 0;
-}
-
-.branchNameRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.branchIcon {
-  width: 12px;
-  color: var(--color-text-muted);
-  font-size: 10px;
-  line-height: 1;
+  padding: 1px 0;
 }
 
 .branchName,
 .branchNameActive {
-  font-size: 14px;
+  display: block;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .branchName {

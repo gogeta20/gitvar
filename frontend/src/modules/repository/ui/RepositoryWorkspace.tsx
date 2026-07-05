@@ -70,34 +70,6 @@ export function RepositoryWorkspace({
   return (
     <section className={styles.workspace}>
       <aside className={styles.sidebar}>
-        <InfoCard title="Repositories">
-          <div className={styles.repositoryList}>
-            {workspace.repositories.map((repository) => {
-              const isSelected = repository.id === selectedRepository.id;
-
-              return (
-                <button
-                  key={repository.id}
-                  className={isSelected ? styles.repositoryButtonActive : styles.repositoryButton}
-                  onClick={() => setSelectedRepositoryId(repository.id)}
-                  type="button"
-                >
-                  <div className={styles.repositoryTopline}>
-                    <strong>{repository.name}</strong>
-                    <span>{repository.status}</span>
-                  </div>
-                  <p>{repository.path}</p>
-                  <div className={styles.repositoryMeta}>
-                    <span>{repository.currentBranch}</span>
-                    <span>
-                      ↑{repository.ahead} ↓{repository.behind}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </InfoCard>
         <BranchesPanel repositoryPath={selectedRepository.path} />
       </aside>
 
