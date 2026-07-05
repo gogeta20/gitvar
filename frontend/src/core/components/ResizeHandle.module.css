@@ -1,0 +1,21 @@
+.handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 10px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.grip {
+  width: 3px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--color-border-default);
+  transition: background 140ms ease;
+}
+
+.handle:hover .grip,
+.handle:active .grip {
+  background: var(--color-text-accent);
+}

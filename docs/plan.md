@@ -108,3 +108,5 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-botonera-iconos.md`.
 - El panel "Commit detail" se reconstruyo con un diseño estilo GitKraken (banner de working directory, barra de hash, tarjeta de mensaje, autor con avatar, stats y arbol de archivos), con datos reales donde existen y mock donde el backend todavia no expone informacion de archivos cambiados.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-commit-detail-mock.md`.
+- El panel de detalle de commit ahora es redimensionable arrastrando un divisor, con el ancho persistido en `localStorage`. La logica vive en un hook reutilizable (`useResizableWidth`) pensado para aplicarse tambien al sidebar izquierdo mas adelante.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-panel-redimensionable.md`.
