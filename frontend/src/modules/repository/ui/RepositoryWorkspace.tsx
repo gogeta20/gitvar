@@ -1,5 +1,6 @@
 import { BranchesPanel } from "@modules/branches/ui/BranchesPanel";
 import { Branch } from "@modules/branches/domain/branch";
+import { CommitDetailPanel } from "@modules/graph/ui/CommitDetailPanel";
 import { CommitGraphPanel } from "@modules/graph/ui/CommitGraphPanel";
 import { GraphCommit } from "@modules/graph/domain/commit";
 import { useEffect, useMemo, useState } from "react";
@@ -189,42 +190,7 @@ export function RepositoryWorkspace({
       </div>
 
       <aside className={styles.detailColumn}>
-        <InfoCard title="Commit detail">
-          {selectedCommit ? (
-            <>
-              <div className={styles.detailHeader}>
-                <span className={styles.detailCommitId}>{selectedCommit.shortId}</span>
-                <span className={styles.detailBranch}>
-                  {selectedCommit.refs[0] ?? "commit"}
-                </span>
-              </div>
-              <h3 className={styles.detailTitle}>{selectedCommit.message}</h3>
-              <div className={styles.detailGrid}>
-                <div>
-                  <span className={styles.detailLabel}>Author</span>
-                  <p>{selectedCommit.authorName}</p>
-                </div>
-                <div>
-                  <span className={styles.detailLabel}>Email</span>
-                  <p>{selectedCommit.authorEmail}</p>
-                </div>
-                <div>
-                  <span className={styles.detailLabel}>Parents</span>
-                  <p>{selectedCommit.parents.length}</p>
-                </div>
-                <div>
-                  <span className={styles.detailLabel}>Date</span>
-                  <p>{selectedCommit.authoredAt}</p>
-                </div>
-              </div>
-            </>
-          ) : (
-            <p className={styles.previewCopy}>
-              Select a commit from the graph to inspect its details. The detail panel
-              still uses mock metadata until the next backend slice.
-            </p>
-          )}
-        </InfoCard>
+        <CommitDetailPanel commit={selectedCommit} />
 
         <InfoCard title="Operation preview">
           <p className={styles.previewCopy}>

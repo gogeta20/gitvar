@@ -106,3 +106,5 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-branches-toggle-y-fondo-grafo.md`.
 - Se adopto `lucide-react` como libreria de iconos y se agrego la primera botonera: un boton solo-icono en el `History map` abre un dropdown con checkboxes para mostrar/ocultar las columnas de autor y fecha.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-botonera-iconos.md`.
+- El panel "Commit detail" se reconstruyo con un diseño estilo GitKraken (banner de working directory, barra de hash, tarjeta de mensaje, autor con avatar, stats y arbol de archivos), con datos reales donde existen y mock donde el backend todavia no expone informacion de archivos cambiados.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-commit-detail-mock.md`.
