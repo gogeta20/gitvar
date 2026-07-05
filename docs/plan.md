@@ -92,3 +92,5 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-tooltip-app.md`.
 - Se introdujo un flujo `develop` en paralelo a `main` para acumular funcionalidades chicas antes de integrarlas de vuelta. El primer pulido visual del grafo (filas mas compactas, refs en minusculas coloreadas por lane, fondo mas oscuro) se hizo bajo ese flujo.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-polish-visual-grafo.md`.
+- La tabla del `History map` tiene su propio fondo oscuro (`--color-bg-elevated`) independiente de la card translucida que comparten los demas paneles, con hover y seleccion de fila mas visibles.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-tabla-oscura-y-hover.md`.
