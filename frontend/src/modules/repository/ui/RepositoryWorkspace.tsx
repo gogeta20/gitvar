@@ -4,6 +4,8 @@ import { CommitGraphPanel } from "@modules/graph/ui/CommitGraphPanel";
 import { GraphCommit } from "@modules/graph/domain/commit";
 import { useEffect, useMemo, useState } from "react";
 import { InfoCard } from "@core/components/InfoCard";
+import { ResizeHandle } from "@core/components/ResizeHandle";
+import { useResizableWidth } from "@core/hooks/useResizableWidth";
 import { loadRepositoryWorkspace } from "@modules/repository/application/use-cases/loadRepositoryWorkspace";
 import {
   RepositorySummary,
@@ -28,6 +30,13 @@ export function RepositoryWorkspace({
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isBranchesOpen, setIsBranchesOpen] = useState(true);
   const [isStashOpen, setIsStashOpen] = useState(false);
+  const detailPanelWidth = useResizableWidth({
+    storageKey: "gitmap.detailPanelWidth",
+    defaultWidth: 320,
+    minWidth: 260,
+    maxWidth: 640,
+    panelPosition: "end"
+  });
 
   useEffect(() => {
     const repositoryReader = createRepositoryReader();
@@ -188,7 +197,13 @@ export function RepositoryWorkspace({
         />
       </div>
 
-      <aside className={styles.detailColumn}>
+      <ResizeHandle
+        className={styles.detailResizeHandle}
+        label="Resize commit detail panel"
+        onPointerDown={detailPanelWidth.startDragging}
+      />
+
+      <aside className={styles.detailColumn} style={{ width: detailPanelWidth.width }}>
         <InfoCard title="Commit detail">
           {selectedCommit ? (
             <>

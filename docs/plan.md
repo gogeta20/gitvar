@@ -104,3 +104,5 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-branch-graph-sync.md`.
 - El sidebar izquierdo del workspace ahora funciona como un menu plegable con rail de accesos y secciones anidadas (`Branches` real, `Stash` mock), cada una con su propio boton `Show`/`Hide`; ademas, el canal del grafo recupero su fondo tintado por lane para distinguir mejor ramas paralelas.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-branches-toggle-y-fondo-grafo.md`.
+- El panel de detalle de commit ahora es redimensionable arrastrando un divisor, con el ancho persistido en `localStorage`. La logica vive en un hook reutilizable (`useResizableWidth`) pensado para aplicarse tambien al sidebar izquierdo mas adelante.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-panel-redimensionable.md`.

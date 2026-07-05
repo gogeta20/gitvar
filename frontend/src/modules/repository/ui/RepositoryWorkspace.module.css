@@ -1,11 +1,15 @@
 .workspace {
   display: grid;
   gap: var(--space-6);
-  grid-template-columns: minmax(160px, max-content) minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(160px, max-content) minmax(0, 1fr) 10px auto;
 }
 
 .workspaceSidebarCollapsed {
-  grid-template-columns: 40px minmax(0, 1fr) 320px;
+  grid-template-columns: 40px minmax(0, 1fr) 10px auto;
+}
+
+.detailResizeHandle {
+  align-self: stretch;
 }
 
 .sidebar,
@@ -227,9 +231,14 @@
     grid-template-columns: 40px minmax(0, 1fr);
   }
 
+  .detailResizeHandle {
+    display: none;
+  }
+
   .detailColumn {
     grid-column: 1 / -1;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: auto !important;
   }
 }
 
