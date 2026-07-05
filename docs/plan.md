@@ -88,3 +88,5 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-badge-divergencia-ramas.md`.
 - Cuando varias ramas apuntan al mismo commit, el `History map` muestra solo la rama actualmente checkeada y un badge `+N` con el resto en un tooltip, en vez de listar todas las refs en linea.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-badge-overflow-refs.md`.
+- Se introdujo un flujo `develop` en paralelo a `main` para acumular funcionalidades chicas antes de integrarlas de vuelta. El primer pulido visual del grafo (filas mas compactas, refs en minusculas coloreadas por lane, fondo mas oscuro) se hizo bajo ese flujo.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-polish-visual-grafo.md`.

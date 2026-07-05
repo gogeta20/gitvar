@@ -1,7 +1,7 @@
-export const GRAPH_LANE_WIDTH = 28;
-export const GRAPH_ROW_HEIGHT = 46;
+export const GRAPH_LANE_WIDTH = 24;
+export const GRAPH_ROW_HEIGHT = 34;
 export const GRAPH_SVG_PADDING_X = 10;
-export const GRAPH_DOT_RADIUS = 5;
+export const GRAPH_DOT_RADIUS = 4;
 
 const GRAPH_LANE_COLORS = [
   "var(--color-graph-lane-0)",
