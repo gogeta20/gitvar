@@ -160,60 +160,23 @@
   font-size: 12px;
 }
 
-.detailHeader {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
 .commitMeta,
-.detailLabel,
 .previewCopy {
   color: var(--color-text-secondary);
 }
 
-.refTag,
-.detailCommitId,
-.detailBranch {
+.refTag {
   border-radius: var(--radius-pill);
   padding: 4px 10px;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-}
-
-.detailCommitId {
-  background: var(--color-badge-neutral);
-}
-
-.refTag,
-.detailBranch {
   background: var(--color-badge-accent);
   color: var(--color-badge-accent-text);
 }
 
-.detailTitle {
-  margin: 0;
-  font-size: 24px;
-}
-
-.detailHeader,
-.detailGrid {
-  margin-bottom: var(--space-4);
-}
-
-.detailGrid {
-  display: grid;
-  gap: var(--space-4);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.detailGrid p,
 .previewList {
   margin: var(--space-2) 0 0;
-}
-
-.previewList {
   padding-left: 20px;
   color: var(--color-text-secondary);
 }
