@@ -104,3 +104,5 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-branch-graph-sync.md`.
 - El sidebar izquierdo del workspace ahora funciona como un menu plegable con rail de accesos y secciones anidadas (`Branches` real, `Stash` mock), cada una con su propio boton `Show`/`Hide`; ademas, el canal del grafo recupero su fondo tintado por lane para distinguir mejor ramas paralelas.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-branches-toggle-y-fondo-grafo.md`.
+- Se adopto `lucide-react` como libreria de iconos y se agrego la primera botonera: un boton solo-icono en el `History map` abre un dropdown con checkboxes para mostrar/ocultar las columnas de autor y fecha.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-botonera-iconos.md`.

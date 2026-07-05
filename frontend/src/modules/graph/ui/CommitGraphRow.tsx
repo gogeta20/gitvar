@@ -13,6 +13,9 @@ interface CommitGraphRowProps {
   isBranchRefSelected: boolean;
   isBranchTarget: boolean;
   isSelected: boolean;
+  showAuthor: boolean;
+  showDate: boolean;
+  showMessage: boolean;
   onSelect: () => void;
 }
 
@@ -34,6 +37,9 @@ export function CommitGraphRow({
   isBranchRefSelected,
   isBranchTarget,
   isSelected,
+  showAuthor,
+  showDate,
+  showMessage,
   onSelect
 }: CommitGraphRowProps) {
   const laneColor = resolveLaneColor(commit.lane);
@@ -41,16 +47,18 @@ export function CommitGraphRow({
     commit.refs,
     selectedBranchName
   );
+  const hasVisibleContent = showAuthor || showDate || showMessage;
+
+  const rowClassName = [
+    isSelected ? styles.commitRowActive : isBranchTarget ? styles.commitRowBranchTarget : styles.commitRow,
+    hasVisibleContent ? null : styles.commitRowCollapsedContent
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <button
-      className={
-        isSelected
-          ? styles.commitRowActive
-          : isBranchTarget
-            ? styles.commitRowBranchTarget
-            : styles.commitRow
-      }
+      className={rowClassName}
       onClick={onSelect}
       style={{ "--lane-color": laneColor } as CSSProperties}
       type="button"
@@ -86,23 +94,27 @@ export function CommitGraphRow({
         ) : null}
       </div>
 
-      <div className={styles.contentCell}>
-        <div className={styles.mainRow}>
-          {!commit.isWorkingChanges ? (
-            <span className={styles.authorCell}>{commit.authorName}</span>
-          ) : null}
+      {hasVisibleContent ? (
+        <div className={styles.contentCell}>
+          <div className={styles.mainRow}>
+            {showAuthor && !commit.isWorkingChanges ? (
+              <span className={styles.authorCell}>{commit.authorName}</span>
+            ) : null}
 
-          <div className={styles.messageCell}>
-            <strong className={commit.isWorkingChanges ? styles.workingChangesMessage : undefined}>
-              {commit.message}
-            </strong>
+            {showMessage ? (
+              <div className={styles.messageCell}>
+                <strong className={commit.isWorkingChanges ? styles.workingChangesMessage : undefined}>
+                  {commit.message}
+                </strong>
+              </div>
+            ) : null}
+
+            {showDate && !commit.isWorkingChanges ? (
+              <span className={styles.dateCell}>{formatDateLabel(commit.authoredAt)}</span>
+            ) : null}
           </div>
-
-          {!commit.isWorkingChanges ? (
-            <span className={styles.dateCell}>{formatDateLabel(commit.authoredAt)}</span>
-          ) : null}
         </div>
-      </div>
+      ) : null}
     </button>
   );
 }
