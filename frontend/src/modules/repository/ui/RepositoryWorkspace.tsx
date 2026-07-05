@@ -25,6 +25,9 @@ export function RepositoryWorkspace({
   const [graphCommits, setGraphCommits] = useState<GraphCommit[]>([]);
   const [selectedCommitId, setSelectedCommitId] = useState<string | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isBranchesOpen, setIsBranchesOpen] = useState(true);
+  const [isStashOpen, setIsStashOpen] = useState(false);
 
   useEffect(() => {
     const repositoryReader = createRepositoryReader();
@@ -80,13 +83,98 @@ export function RepositoryWorkspace({
   }
 
   return (
-    <section className={styles.workspace}>
-      <aside className={styles.sidebar}>
-        <BranchesPanel
-          onSelectBranch={handleSelectBranch}
-          repositoryPath={selectedRepository.path}
-          selectedBranchName={selectedBranch?.name ?? null}
-        />
+    <section
+      className={
+        isSidebarOpen
+          ? styles.workspace
+          : `${styles.workspace} ${styles.workspaceSidebarCollapsed}`
+      }
+    >
+      <aside
+        className={
+          isSidebarOpen
+            ? styles.sidebar
+            : `${styles.sidebar} ${styles.sidebarCollapsed}`
+        }
+      >
+        {!isSidebarOpen ? (
+          <button
+            className={styles.sidebarCollapsedToggle}
+            onClick={() => setIsSidebarOpen(true)}
+            type="button"
+          >
+            <span className={styles.sidebarIconBadge}>{">"}</span>
+          </button>
+        ) : null}
+
+        {isSidebarOpen ? (
+          <div className={styles.sidebarPanels}>
+            <section className={styles.sidebarSection}>
+              <div className={styles.sidebarSectionHeader}>
+                <div className={styles.sidebarSectionTitleRow}>
+                  <button
+                    className={styles.sidebarInlineCollapse}
+                    onClick={() => setIsSidebarOpen(false)}
+                    type="button"
+                  >
+                    <span className={styles.sidebarIconBadge}>{"<"}</span>
+                  </button>
+                  <button
+                    className={styles.sidebarSectionTitleButton}
+                    onClick={() => setIsBranchesOpen((current) => !current)}
+                    type="button"
+                  >
+                    <strong>Branches</strong>
+                  </button>
+                </div>
+              </div>
+
+              {isBranchesOpen ? (
+                <div className={styles.sidebarSectionBody}>
+                  <BranchesPanel
+                    embedded
+                    onSelectBranch={handleSelectBranch}
+                    repositoryPath={selectedRepository.path}
+                    selectedBranchName={selectedBranch?.name ?? null}
+                  />
+                </div>
+              ) : null}
+            </section>
+
+            <section className={styles.sidebarSection}>
+              <div className={styles.sidebarSectionHeader}>
+                <div className={styles.sidebarSectionTitleRow}>
+                  <button
+                    className={styles.sidebarSectionTitleButton}
+                    onClick={() => setIsStashOpen((current) => !current)}
+                    type="button"
+                  >
+                    <strong>Stash</strong>
+                  </button>
+                </div>
+              </div>
+
+              {isStashOpen ? (
+                <div className={styles.sidebarSectionBody}>
+                  <div className={styles.mockList}>
+                    <button className={styles.mockItem} type="button">
+                      <span className={styles.mockItemTitle}>stash@&#123;0&#125;</span>
+                      <span className={styles.mockItemMeta}>WIP graph polish</span>
+                    </button>
+                    <button className={styles.mockItem} type="button">
+                      <span className={styles.mockItemTitle}>stash@&#123;1&#125;</span>
+                      <span className={styles.mockItemMeta}>Explore sidebar toggle</span>
+                    </button>
+                    <button className={styles.mockItem} type="button">
+                      <span className={styles.mockItemTitle}>stash@&#123;2&#125;</span>
+                      <span className={styles.mockItemMeta}>Theme probe mock</span>
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </section>
+          </div>
+        ) : null}
       </aside>
 
       <div className={styles.historyColumn}>

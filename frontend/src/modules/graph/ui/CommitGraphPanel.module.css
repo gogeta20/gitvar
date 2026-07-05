@@ -65,6 +65,12 @@
   justify-content: center;
   border-left: 1px solid color-mix(in srgb, var(--lane-color) 50%, transparent);
   border-right: 1px solid color-mix(in srgb, var(--lane-color) 35%, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--lane-color) 6%, var(--color-bg-elevated)),
+    color-mix(in srgb, var(--lane-color) 12%, var(--color-bg-elevated)) 45%,
+    color-mix(in srgb, var(--lane-color) 6%, var(--color-bg-elevated))
+  );
 }
 
 .divergenceBadge {

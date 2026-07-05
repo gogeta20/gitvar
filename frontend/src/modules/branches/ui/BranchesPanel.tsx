@@ -9,12 +9,14 @@ interface BranchesPanelProps {
   repositoryPath: string;
   selectedBranchName: string | null;
   onSelectBranch: (branch: Branch) => void;
+  embedded?: boolean;
 }
 
 export function BranchesPanel({
   repositoryPath,
   selectedBranchName,
-  onSelectBranch
+  onSelectBranch,
+  embedded = false
 }: BranchesPanelProps) {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -52,8 +54,8 @@ export function BranchesPanel({
     });
   }, [branches]);
 
-  return (
-    <InfoCard title="Branches">
+  const content = (
+    <>
       {error ? <p className={styles.error}>{error}</p> : null}
 
       {!error ? (
@@ -95,6 +97,12 @@ export function BranchesPanel({
       {!error && branches.length === 0 ? (
         <p className={styles.empty}>No branches returned by backend.</p>
       ) : null}
-    </InfoCard>
+    </>
   );
+
+  if (embedded) {
+    return content;
+  }
+
+  return <InfoCard title="Branches">{content}</InfoCard>;
 }

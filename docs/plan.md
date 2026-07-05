@@ -100,3 +100,7 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-tipografia-jetbrains-mono.md`.
 - Se quito el panel de "Repositories" dentro del workspace (redundante con `RepositoryPicker`) y se corrigio un bug de layout donde el sidebar podia desbordar su columna de grid y quedar tapado por el panel del grafo en anchos intermedios.
 - El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-fix-sidebar-responsive.md`.
+- El panel `Branches` y el `History map` ya comparten seleccion: al clicar una rama se marca en la lista, se promueve su ref visible en el grafo y se selecciona su commit tip sin hacer refetch al backend.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-branch-graph-sync.md`.
+- El sidebar izquierdo del workspace ahora funciona como un menu plegable con rail de accesos y secciones anidadas (`Branches` real, `Stash` mock), cada una con su propio boton `Show`/`Hide`; ademas, el canal del grafo recupero su fondo tintado por lane para distinguir mejor ramas paralelas.
+- El detalle de esta fase se documenta en `docs/sesiones/2026-07-05-branches-toggle-y-fondo-grafo.md`.
