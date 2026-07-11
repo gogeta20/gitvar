@@ -1,13 +1,8 @@
 .workspace {
   display: grid;
-  grid-template-columns: auto 10px minmax(0, 1fr) 10px auto;
   flex: 1 1 auto;
   height: 100%;
   min-height: 0;
-}
-
-.workspaceSidebarCollapsed {
-  grid-template-columns: 40px minmax(0, 1fr) 10px auto;
 }
 
 .detailResizeHandle,
@@ -27,10 +22,6 @@
   overflow-y: auto;
 }
 
-.sidebarCollapsed {
-  grid-template-columns: 32px;
-}
-
 .historyColumn,
 .detailColumn {
   min-width: 0;
@@ -39,8 +30,34 @@
   overflow: hidden;
 }
 
-.sidebarCollapsedToggle,
-.sidebarInlineCollapse,
+.historyColumn {
+  position: relative;
+}
+
+.sidebarToggleFloating,
+.detailToggleFloating {
+  position: absolute;
+  top: -18px;
+  z-index: 2;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.sidebarToggleFloating {
+  left: 6px;
+}
+
+.detailToggleFloating {
+  right: 6px;
+}
+
+.sidebarToggleFloating:hover .sidebarIconBadge,
+.detailToggleFloating:hover .sidebarIconBadge {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .mockItem {
   border: 1px solid var(--color-border-default);
   background: var(--color-bg-button);
@@ -49,8 +66,6 @@
   transition: border-color 140ms ease, background 140ms ease;
 }
 
-.sidebarCollapsedToggle:hover,
-.sidebarInlineCollapse:hover,
 .sidebarSectionTitleButton:hover,
 .mockItem:hover {
   border-color: var(--color-border-strong);
@@ -69,17 +84,6 @@
   font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
-}
-
-.sidebarCollapsedToggle {
-  width: 32px;
-  min-height: 32px;
-  border-radius: 10px;
-  color: var(--color-text-primary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
 }
 
 .sidebarPanels {
@@ -114,17 +118,6 @@
 .sidebarSectionTitleRow {
   width: 100%;
   gap: 10px;
-}
-
-.sidebarInlineCollapse {
-  width: 32px;
-  min-height: 32px;
-  border-radius: 10px;
-  color: var(--color-text-primary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
 }
 
 .sidebarSectionTitleButton {
@@ -186,13 +179,9 @@
 
 @media (max-width: 1180px) {
   .workspace {
-    grid-template-columns: minmax(160px, max-content) minmax(0, 1fr);
+    grid-template-columns: minmax(160px, max-content) minmax(0, 1fr) !important;
     height: auto;
     overflow: visible;
-  }
-
-  .workspaceSidebarCollapsed {
-    grid-template-columns: 40px minmax(0, 1fr);
   }
 
   .detailResizeHandle,
@@ -220,11 +209,6 @@
 @media (max-width: 900px) {
   .workspace,
   .detailColumn {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar,
-  .sidebarCollapsed {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 }
