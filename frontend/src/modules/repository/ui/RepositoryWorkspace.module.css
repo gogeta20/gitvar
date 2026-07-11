@@ -1,6 +1,6 @@
 .workspace {
   display: grid;
-  grid-template-columns: minmax(160px, max-content) minmax(0, 1fr) 10px auto;
+  grid-template-columns: auto 10px minmax(0, 1fr) 10px auto;
   flex: 1 1 auto;
   height: 100%;
   min-height: 0;
@@ -10,7 +10,8 @@
   grid-template-columns: 40px minmax(0, 1fr) 10px auto;
 }
 
-.detailResizeHandle {
+.detailResizeHandle,
+.sidebarResizeHandle {
   align-self: stretch;
 }
 
@@ -194,7 +195,8 @@
     grid-template-columns: 40px minmax(0, 1fr);
   }
 
-  .detailResizeHandle {
+  .detailResizeHandle,
+  .sidebarResizeHandle {
     display: none;
   }
 
@@ -203,6 +205,10 @@
   .detailColumn {
     height: auto;
     overflow: visible;
+  }
+
+  .sidebar {
+    width: auto !important;
   }
 
   .detailColumn {

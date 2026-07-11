@@ -41,6 +41,13 @@ export function RepositoryWorkspace({
     maxWidth: 640,
     panelPosition: "end"
   });
+  const sidebarWidth = useResizableWidth({
+    storageKey: "gitmap.sidebarWidth",
+    defaultWidth: 260,
+    minWidth: 200,
+    maxWidth: 480,
+    panelPosition: "start"
+  });
 
   useEffect(() => {
     const repositoryReader = createRepositoryReader();
@@ -119,6 +126,7 @@ export function RepositoryWorkspace({
             ? styles.sidebar
             : `${styles.sidebar} ${styles.sidebarCollapsed}`
         }
+        style={isSidebarOpen ? { width: sidebarWidth.width } : undefined}
       >
         {!isSidebarOpen ? (
           <button
@@ -199,6 +207,14 @@ export function RepositoryWorkspace({
           </div>
         ) : null}
       </aside>
+
+      {isSidebarOpen ? (
+        <ResizeHandle
+          className={styles.sidebarResizeHandle}
+          label="Resize sidebar"
+          onPointerDown={sidebarWidth.startDragging}
+        />
+      ) : null}
 
       <div className={styles.historyColumn}>
         {selectedFilePath && selectedCommit ? (
