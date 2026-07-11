@@ -1,6 +1,9 @@
 .workspace {
   display: grid;
   grid-template-columns: minmax(160px, max-content) minmax(0, 1fr) 10px auto;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
 }
 
 .workspaceSidebarCollapsed {
@@ -17,6 +20,9 @@
   gap: var(--space-6);
   align-content: start;
   min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .sidebar {
@@ -30,6 +36,9 @@
 
 .historyColumn {
   min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .sidebarCollapsedToggle,
@@ -187,6 +196,8 @@
 @media (max-width: 1180px) {
   .workspace {
     grid-template-columns: minmax(160px, max-content) minmax(0, 1fr);
+    height: auto;
+    overflow: visible;
   }
 
   .workspaceSidebarCollapsed {
@@ -195,6 +206,13 @@
 
   .detailResizeHandle {
     display: none;
+  }
+
+  .sidebar,
+  .historyColumn,
+  .detailColumn {
+    height: auto;
+    overflow-y: visible;
   }
 
   .detailColumn {

@@ -1,9 +1,12 @@
 .shell {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
   padding: var(--space-8);
 }
 
 .header {
+  flex-shrink: 0;
   margin: 0 0 var(--space-6);
 }
 
@@ -23,4 +26,7 @@
 
 .content {
   width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
