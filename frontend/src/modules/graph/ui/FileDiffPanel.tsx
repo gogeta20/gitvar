@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { InfoCard } from "@core/components/InfoCard";
 import { readFileDiff } from "@modules/graph/application/use-cases/readFileDiff";
 import { createFileDiffReader } from "@modules/graph/infrastructure/FileDiffReaderProvider";
-import { parseDiffText } from "@modules/graph/lib/parseDiffText";
+import { parseDiffHunks } from "@modules/graph/lib/parseDiffHunks";
 import styles from "./FileDiffPanel.module.css";
 
 interface FileDiffPanelProps {
@@ -32,7 +32,7 @@ export function FileDiffPanel({ repositoryPath, commitId, filePath, onClose }: F
       });
   }, [repositoryPath, commitId, filePath]);
 
-  const diffLines = parseDiffText(diffText);
+  const hunks = parseDiffHunks(diffText);
 
   return (
     <InfoCard
@@ -46,19 +46,27 @@ export function FileDiffPanel({ repositoryPath, commitId, filePath, onClose }: F
     >
       {error ? <p className={styles.error}>{error}</p> : null}
 
-      {!error && diffLines.length === 0 ? (
+      {!error && hunks.length === 0 ? (
         <p className={styles.empty}>No diff available for this file.</p>
       ) : null}
 
-      {!error && diffLines.length > 0 ? (
-        <pre className={styles.diff}>
-          {diffLines.map((line, index) => (
-            <div className={styles[`line-${line.type}`]} key={index}>
-              {line.content || " "}
-            </div>
-          ))}
-        </pre>
-      ) : null}
+      <div className={styles.hunkList}>
+        {hunks.map((hunk, hunkIndex) => (
+          <div className={styles.hunk} key={hunkIndex}>
+            <div className={styles.hunkHeader}>{hunk.header}</div>
+            {hunk.lines.map((line, lineIndex) => (
+              <div
+                className={`${styles.hunkLine} ${styles[`hunkLine-${line.type}`]}`}
+                key={lineIndex}
+              >
+                <span className={styles.lineNumber}>{line.oldLineNumber ?? ""}</span>
+                <span className={styles.lineNumber}>{line.newLineNumber ?? ""}</span>
+                <span className={styles.lineContent}>{line.content || " "}</span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </InfoCard>
   );
 }

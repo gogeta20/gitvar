@@ -7,12 +7,16 @@ export interface FileChangeGroup {
 
 const ROOT_GROUP_PATH = "(root)";
 
+export function groupPathForFile(filePath: string): string {
+  const separatorIndex = filePath.indexOf("/");
+  return separatorIndex === -1 ? ROOT_GROUP_PATH : filePath.slice(0, separatorIndex);
+}
+
 export function groupFileChanges(files: FileChange[]): FileChangeGroup[] {
   const groupsByPath = new Map<string, FileChange[]>();
 
   for (const file of files) {
-    const separatorIndex = file.path.indexOf("/");
-    const groupPath = separatorIndex === -1 ? ROOT_GROUP_PATH : file.path.slice(0, separatorIndex);
+    const groupPath = groupPathForFile(file.path);
 
     const groupFiles = groupsByPath.get(groupPath) ?? [];
     groupFiles.push(file);

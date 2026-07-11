@@ -81,13 +81,16 @@ fn read_untracked_file_as_diff(repository_path: &Path, file_path: &str) -> Resul
     let content = fs::read_to_string(repository_path.join(file_path))
         .map_err(|error| AppError::IoError(error.to_string()))?;
 
+    let line_count = content.lines().count();
     let body = content
         .lines()
         .map(|line| format!("+{line}"))
         .collect::<Vec<_>>()
         .join("\n");
 
-    Ok(format!("--- /dev/null\n+++ b/{file_path}\n{body}"))
+    Ok(format!(
+        "--- /dev/null\n+++ b/{file_path}\n@@ -0,0 +1,{line_count} @@\n{body}"
+    ))
 }
 
 fn strip_commit_header(show_output: &str) -> String {

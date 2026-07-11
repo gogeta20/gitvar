@@ -18,12 +18,13 @@ import { FileChange } from "@modules/graph/domain/fileChange";
 import { WorkingStatus } from "@modules/graph/domain/workingStatus";
 import { createCommitFilesReader } from "@modules/graph/infrastructure/CommitFilesReaderProvider";
 import { createStatusReader } from "@modules/graph/infrastructure/StatusReaderProvider";
-import { countByChangeType, groupFileChanges } from "@modules/graph/lib/groupFileChanges";
+import { countByChangeType, groupFileChanges, groupPathForFile } from "@modules/graph/lib/groupFileChanges";
 import styles from "./CommitDetailPanel.module.css";
 
 interface CommitDetailPanelProps {
   commit: GraphCommit | null;
   repositoryPath: string;
+  selectedFilePath: string | null;
   onSelectFile: (filePath: string) => void;
 }
 
@@ -45,10 +46,16 @@ function formatAuthoredDate(input: string): string {
     .replace(",", " @");
 }
 
-export function CommitDetailPanel({ commit, repositoryPath, onSelectFile }: CommitDetailPanelProps) {
+export function CommitDetailPanel({
+  commit,
+  repositoryPath,
+  selectedFilePath,
+  onSelectFile
+}: CommitDetailPanelProps) {
   const [viewMode, setViewMode] = useState<"tree" | "path">("tree");
   const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
   const [showAllFiles, setShowAllFiles] = useState(false);
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
   const [workingStatus, setWorkingStatus] = useState<WorkingStatus | null>(null);
   const [commitFiles, setCommitFiles] = useState<FileChange[]>([]);
   const [filesError, setFilesError] = useState<string | null>(null);
@@ -80,6 +87,17 @@ export function CommitDetailPanel({ commit, repositoryPath, onSelectFile }: Comm
         );
       });
   }, [commit, repositoryPath]);
+
+  useEffect(() => {
+    if (!selectedFilePath) {
+      return;
+    }
+
+    const groupPath = groupPathForFile(selectedFilePath);
+    setExpandedPaths((current) =>
+      current.includes(groupPath) ? current : [...current, groupPath]
+    );
+  }, [selectedFilePath]);
 
   function toggleExpanded(path: string) {
     setExpandedPaths((current) =>
@@ -117,49 +135,62 @@ export function CommitDetailPanel({ commit, repositoryPath, onSelectFile }: Comm
         </div>
       ) : null}
 
-      <div className={styles.commitBar}>
-        <span className={styles.commitBarLabel}>
-          {commit.isWorkingChanges ? (
-            "Working directory"
-          ) : (
-            <>
-              commit: <span className={styles.commitBarHash}>{commit.shortId}</span>
-            </>
-          )}
-        </span>
-        {!commit.isWorkingChanges ? (
-          <button className={styles.aiButton} type="button">
-            <Sparkles size={14} />
-            Recompose commit with AI
-            <ChevronDown size={14} />
-          </button>
-        ) : null}
-      </div>
+      <button
+        className={styles.summaryToggle}
+        onClick={() => setIsSummaryExpanded((current) => !current)}
+        type="button"
+      >
+        {isSummaryExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        Commit details
+      </button>
 
-      <div className={styles.messageCard}>
-        <h3 className={styles.messageTitle}>{commit.message}</h3>
-        <p className={styles.messageBody}>
-          {commit.isWorkingChanges
-            ? "Changes not yet committed in the working directory."
-            : "Mock description until the backend sends the full commit body, not just the subject line."}
-        </p>
-      </div>
-
-      {!commit.isWorkingChanges ? (
-        <div className={styles.authorRow}>
-          <div className={styles.authorIdentity}>
-            <span className={styles.authorAvatar} aria-hidden="true">
-              {authorInitial}
+      {isSummaryExpanded ? (
+        <>
+          <div className={styles.commitBar}>
+            <span className={styles.commitBarLabel}>
+              {commit.isWorkingChanges ? (
+                "Working directory"
+              ) : (
+                <>
+                  commit: <span className={styles.commitBarHash}>{commit.shortId}</span>
+                </>
+              )}
             </span>
-            <div>
-              <div className={styles.authorName}>{commit.authorName}</div>
-              <div className={styles.authorDate}>
-                authored {formatAuthoredDate(commit.authoredAt)}
-              </div>
-            </div>
+            {!commit.isWorkingChanges ? (
+              <button className={styles.aiButton} type="button">
+                <Sparkles size={14} />
+                Recompose commit with AI
+                <ChevronDown size={14} />
+              </button>
+            ) : null}
           </div>
-          <span className={styles.parentLabel}>parent: {parentShortId}</span>
-        </div>
+
+          <div className={styles.messageCard}>
+            <h3 className={styles.messageTitle}>{commit.message}</h3>
+            <p className={styles.messageBody}>
+              {commit.isWorkingChanges
+                ? "Changes not yet committed in the working directory."
+                : "Mock description until the backend sends the full commit body, not just the subject line."}
+            </p>
+          </div>
+
+          {!commit.isWorkingChanges ? (
+            <div className={styles.authorRow}>
+              <div className={styles.authorIdentity}>
+                <span className={styles.authorAvatar} aria-hidden="true">
+                  {authorInitial}
+                </span>
+                <div>
+                  <div className={styles.authorName}>{commit.authorName}</div>
+                  <div className={styles.authorDate}>
+                    authored {formatAuthoredDate(commit.authoredAt)}
+                  </div>
+                </div>
+              </div>
+              <span className={styles.parentLabel}>parent: {parentShortId}</span>
+            </div>
+          ) : null}
+        </>
       ) : null}
 
       <div className={styles.statsRow}>
@@ -231,7 +262,7 @@ export function CommitDetailPanel({ commit, repositoryPath, onSelectFile }: Comm
 
       {filesError ? <p className={styles.emptyState}>{filesError}</p> : null}
 
-      <div className={styles.fileTree}>
+      <div className={styles.fileTreeScroll}>
         {fileGroups.map((group) => {
           const isExpanded = expandedPaths.includes(group.path);
           const groupModifiedCount = countByChangeType(group.files, ["modified", "renamed"]);
@@ -272,7 +303,11 @@ export function CommitDetailPanel({ commit, repositoryPath, onSelectFile }: Comm
                   {group.files.map((file) => (
                     <li key={file.path}>
                       <button
-                        className={styles.fileListItem}
+                        className={
+                          file.path === selectedFilePath
+                            ? styles.fileListItemActive
+                            : styles.fileListItem
+                        }
                         onClick={() => onSelectFile(file.path)}
                         type="button"
                       >

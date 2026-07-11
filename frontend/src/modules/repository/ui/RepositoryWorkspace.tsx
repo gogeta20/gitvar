@@ -225,6 +225,7 @@ export function RepositoryWorkspace({
           commit={selectedCommit}
           onSelectFile={setSelectedFilePath}
           repositoryPath={selectedRepository.path}
+          selectedFilePath={selectedFilePath}
         />
 
         <InfoCard title="Operation preview">
