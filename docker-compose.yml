@@ -12,6 +12,9 @@ services:
       - node-cache:/workspace/frontend/node_modules
     tty: true
     stdin_open: true
+    ports:
+      - "5173:5173"
+      - "7878:7878"
     command: sleep infinity
 
 volumes:

@@ -35,6 +35,7 @@ Construir la base de GitMap como aplicacion desktop para explorar repositorios G
 
 - `docs/normas.md`: reglas de trabajo y convenciones del proyecto.
 - `docs/plan.md`: plan activo del proyecto, actualizable cuando cambie la direccion.
+- `docs/comandos.md`: comandos de referencia para levantar y verificar el proyecto (Docker, backend, frontend).
 
 ## Estructura raiz inicial
 

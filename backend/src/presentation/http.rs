@@ -18,10 +18,10 @@ pub fn serve(
     commit_reader: &dyn CommitReader,
     status_reader: &dyn StatusReader,
 ) -> Result<(), AppError> {
-    let listener = TcpListener::bind("127.0.0.1:7878")
+    let listener = TcpListener::bind("0.0.0.0:7878")
         .map_err(|error| AppError::IoError(error.to_string()))?;
 
-    println!("GitMap backend listening on http://127.0.0.1:7878");
+    println!("GitMap backend listening on http://0.0.0.0:7878");
 
     for stream in listener.incoming() {
         let mut stream = stream.map_err(|error| AppError::IoError(error.to_string()))?;

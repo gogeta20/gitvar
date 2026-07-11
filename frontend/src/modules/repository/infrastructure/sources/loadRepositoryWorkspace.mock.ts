@@ -7,7 +7,7 @@ export async function loadRepositoryWorkspaceFromMock(): Promise<RepositoryWorks
       {
         id: "repo-1",
         name: "gitmap",
-        path: "/home/mau/projects/personal/gipmap",
+        path: "/workspace",
         currentBranch: "feature/graph-divergence-probe",
         status: "modified",
         ahead: 3,

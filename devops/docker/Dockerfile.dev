@@ -36,5 +36,7 @@ RUN curl https://sh.rustup.rs -sSf | bash -s -- -y --profile minimal \
     && rustup default stable \
     && cargo install tauri-cli
 
+RUN git config --global --add safe.directory /workspace
+
 WORKDIR /workspace
 
