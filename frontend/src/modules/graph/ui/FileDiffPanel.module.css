@@ -1,0 +1,78 @@
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 8px;
+  background: var(--color-bg-button);
+  color: var(--color-text-primary);
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.backButton:hover {
+  border-color: var(--color-border-strong);
+}
+
+.error,
+.empty {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.hunkList {
+  display: grid;
+  gap: var(--space-4);
+  overflow-x: auto;
+  font-size: 12px;
+}
+
+.hunk {
+  border: 1px solid var(--color-border-default);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.hunkHeader {
+  padding: 4px var(--space-3);
+  color: var(--color-text-accent);
+  background: color-mix(in srgb, var(--color-text-accent) 12%, var(--color-bg-elevated));
+  border-bottom: 1px solid var(--color-border-default);
+  font-size: 11px;
+}
+
+.hunkLine {
+  display: grid;
+  grid-template-columns: 40px 40px 1fr;
+}
+
+.lineNumber {
+  padding: 0 6px;
+  text-align: right;
+  color: var(--color-text-muted);
+  user-select: none;
+}
+
+.lineContent {
+  padding: 0 var(--space-3);
+  white-space: pre;
+  color: var(--color-text-secondary);
+}
+
+.hunkLine-added {
+  background: color-mix(in srgb, var(--color-graph-lane-1) 22%, transparent);
+}
+
+.hunkLine-added .lineContent {
+  color: var(--color-text-primary);
+}
+
+.hunkLine-removed {
+  background: color-mix(in srgb, var(--color-graph-lane-3) 22%, transparent);
+}
+
+.hunkLine-removed .lineContent {
+  color: var(--color-text-primary);
+}

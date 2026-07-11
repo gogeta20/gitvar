@@ -5,12 +5,15 @@ import {
   ChevronRight,
   FolderTree,
   List,
+  Palette,
   Pencil,
   Plus,
+  Search,
   Sparkles,
   Trash2
 } from "lucide-react";
 import { InfoCard } from "@core/components/InfoCard";
+import { Tooltip } from "@core/components/Tooltip";
 import { readCommitFiles } from "@modules/graph/application/use-cases/readCommitFiles";
 import { readStatus } from "@modules/graph/application/use-cases/readStatus";
 import { GraphCommit } from "@modules/graph/domain/commit";
@@ -18,12 +21,23 @@ import { FileChange } from "@modules/graph/domain/fileChange";
 import { WorkingStatus } from "@modules/graph/domain/workingStatus";
 import { createCommitFilesReader } from "@modules/graph/infrastructure/CommitFilesReaderProvider";
 import { createStatusReader } from "@modules/graph/infrastructure/StatusReaderProvider";
-import { countByChangeType, groupFileChanges } from "@modules/graph/lib/groupFileChanges";
+import { ancestorFolderPaths, buildFileTree, collectFolderPaths } from "@modules/graph/lib/buildFileTree";
+import { changeTypeLetter } from "@modules/graph/lib/changeTypeLetter";
+import { countByChangeType } from "@modules/graph/lib/countByChangeType";
+import {
+  compareFilesBySortMode,
+  FileSortMode,
+  nextSortMode,
+  sortModeLabel
+} from "@modules/graph/lib/fileSort";
+import { FileTreeView } from "@modules/graph/ui/FileTreeView";
 import styles from "./CommitDetailPanel.module.css";
 
 interface CommitDetailPanelProps {
   commit: GraphCommit | null;
   repositoryPath: string;
+  selectedFilePath: string | null;
+  onSelectFile: (filePath: string) => void;
 }
 
 function formatAuthoredDate(input: string): string {
@@ -44,10 +58,18 @@ function formatAuthoredDate(input: string): string {
     .replace(",", " @");
 }
 
-export function CommitDetailPanel({ commit, repositoryPath }: CommitDetailPanelProps) {
+export function CommitDetailPanel({
+  commit,
+  repositoryPath,
+  selectedFilePath,
+  onSelectFile
+}: CommitDetailPanelProps) {
   const [viewMode, setViewMode] = useState<"tree" | "path">("tree");
   const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
-  const [showAllFiles, setShowAllFiles] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [colorizeFileNames, setColorizeFileNames] = useState(false);
+  const [sortMode, setSortMode] = useState<FileSortMode>("az");
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
   const [workingStatus, setWorkingStatus] = useState<WorkingStatus | null>(null);
   const [commitFiles, setCommitFiles] = useState<FileChange[]>([]);
   const [filesError, setFilesError] = useState<string | null>(null);
@@ -80,6 +102,15 @@ export function CommitDetailPanel({ commit, repositoryPath }: CommitDetailPanelP
       });
   }, [commit, repositoryPath]);
 
+  useEffect(() => {
+    if (!selectedFilePath) {
+      return;
+    }
+
+    const ancestors = ancestorFolderPaths(selectedFilePath);
+    setExpandedPaths((current) => Array.from(new Set([...current, ...ancestors])));
+  }, [selectedFilePath]);
+
   function toggleExpanded(path: string) {
     setExpandedPaths((current) =>
       current.includes(path) ? current.filter((item) => item !== path) : [...current, path]
@@ -97,13 +128,45 @@ export function CommitDetailPanel({ commit, repositoryPath }: CommitDetailPanelP
   }
 
   const files = commit.isWorkingChanges ? workingStatus?.changedFiles ?? [] : commitFiles;
-  const fileGroups = groupFileChanges(files);
+  const compareFiles = compareFilesBySortMode(sortMode);
+  const sortedFiles = [...files].sort(compareFiles);
+  const fileTree = buildFileTree(files, compareFiles);
+  const folderPaths = collectFolderPaths(fileTree);
   const modifiedCount = countByChangeType(files, ["modified", "renamed"]);
   const addedCount = countByChangeType(files, ["added", "untracked"]);
   const deletedCount = countByChangeType(files, ["deleted"]);
 
   const parentShortId = commit.parents[0]?.slice(0, 7) ?? "—";
   const authorInitial = commit.authorName.charAt(0).toUpperCase() || "?";
+
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+  const filteredFiles = trimmedQuery
+    ? sortedFiles.filter((file) => file.path.toLowerCase().includes(trimmedQuery))
+    : [];
+
+  function renderFileRow(file: FileChange) {
+    return (
+      <button
+        className={file.path === selectedFilePath ? styles.fileListItemActive : styles.fileListItem}
+        key={file.path}
+        onClick={() => onSelectFile(file.path)}
+        type="button"
+      >
+        <span
+          className={
+            colorizeFileNames
+              ? `${styles.fileListItemName} ${styles[`statusBadge-${file.changeType}`]}`
+              : styles.fileListItemName
+          }
+        >
+          {file.path}
+        </span>
+        <span className={`${styles.statusBadge} ${styles[`statusBadge-${file.changeType}`]}`}>
+          {changeTypeLetter(file.changeType)}
+        </span>
+      </button>
+    );
+  }
 
   return (
     <InfoCard>
@@ -116,49 +179,62 @@ export function CommitDetailPanel({ commit, repositoryPath }: CommitDetailPanelP
         </div>
       ) : null}
 
-      <div className={styles.commitBar}>
-        <span className={styles.commitBarLabel}>
-          {commit.isWorkingChanges ? (
-            "Working directory"
-          ) : (
-            <>
-              commit: <span className={styles.commitBarHash}>{commit.shortId}</span>
-            </>
-          )}
-        </span>
-        {!commit.isWorkingChanges ? (
-          <button className={styles.aiButton} type="button">
-            <Sparkles size={14} />
-            Recompose commit with AI
-            <ChevronDown size={14} />
-          </button>
-        ) : null}
-      </div>
+      <button
+        className={styles.summaryToggle}
+        onClick={() => setIsSummaryExpanded((current) => !current)}
+        type="button"
+      >
+        {isSummaryExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        Commit details
+      </button>
 
-      <div className={styles.messageCard}>
-        <h3 className={styles.messageTitle}>{commit.message}</h3>
-        <p className={styles.messageBody}>
-          {commit.isWorkingChanges
-            ? "Changes not yet committed in the working directory."
-            : "Mock description until the backend sends the full commit body, not just the subject line."}
-        </p>
-      </div>
-
-      {!commit.isWorkingChanges ? (
-        <div className={styles.authorRow}>
-          <div className={styles.authorIdentity}>
-            <span className={styles.authorAvatar} aria-hidden="true">
-              {authorInitial}
+      {isSummaryExpanded ? (
+        <>
+          <div className={styles.commitBar}>
+            <span className={styles.commitBarLabel}>
+              {commit.isWorkingChanges ? (
+                "Working directory"
+              ) : (
+                <>
+                  commit: <span className={styles.commitBarHash}>{commit.shortId}</span>
+                </>
+              )}
             </span>
-            <div>
-              <div className={styles.authorName}>{commit.authorName}</div>
-              <div className={styles.authorDate}>
-                authored {formatAuthoredDate(commit.authoredAt)}
-              </div>
-            </div>
+            {!commit.isWorkingChanges ? (
+              <button className={styles.aiButton} type="button">
+                <Sparkles size={14} />
+                Recompose commit with AI
+                <ChevronDown size={14} />
+              </button>
+            ) : null}
           </div>
-          <span className={styles.parentLabel}>parent: {parentShortId}</span>
-        </div>
+
+          <div className={styles.messageCard}>
+            <h3 className={styles.messageTitle}>{commit.message}</h3>
+            <p className={styles.messageBody}>
+              {commit.isWorkingChanges
+                ? "Changes not yet committed in the working directory."
+                : "Mock description until the backend sends the full commit body, not just the subject line."}
+            </p>
+          </div>
+
+          {!commit.isWorkingChanges ? (
+            <div className={styles.authorRow}>
+              <div className={styles.authorIdentity}>
+                <span className={styles.authorAvatar} aria-hidden="true">
+                  {authorInitial}
+                </span>
+                <div>
+                  <div className={styles.authorName}>{commit.authorName}</div>
+                  <div className={styles.authorDate}>
+                    authored {formatAuthoredDate(commit.authoredAt)}
+                  </div>
+                </div>
+              </div>
+              <span className={styles.parentLabel}>parent: {parentShortId}</span>
+            </div>
+          ) : null}
+        </>
       ) : null}
 
       <div className={styles.statsRow}>
@@ -183,8 +259,27 @@ export function CommitDetailPanel({ commit, repositoryPath }: CommitDetailPanelP
       </div>
 
       <div className={styles.fileToolbar}>
-        <button aria-label="Sort files" className={styles.toolbarIconButton} type="button">
-          <ArrowUpDown size={14} />
+        <Tooltip items={[sortModeLabel(sortMode)]}>
+          <button
+            aria-label="Sort files"
+            className={styles.toolbarIconButton}
+            onClick={() => setSortMode((current) => nextSortMode(current))}
+            type="button"
+          >
+            <ArrowUpDown size={14} />
+          </button>
+        </Tooltip>
+
+        <button
+          aria-label="Colorize file names by change type"
+          aria-pressed={colorizeFileNames}
+          className={
+            colorizeFileNames ? styles.toolbarIconButtonActive : styles.toolbarIconButton
+          }
+          onClick={() => setColorizeFileNames((current) => !current)}
+          type="button"
+        >
+          <Palette size={14} />
         </button>
 
         <div className={styles.viewModeToggle}>
@@ -206,78 +301,52 @@ export function CommitDetailPanel({ commit, repositoryPath }: CommitDetailPanelP
           </button>
         </div>
 
-        <label className={styles.viewAllFiles}>
+        <div className={styles.searchBox}>
+          <Search size={14} />
           <input
-            checked={showAllFiles}
-            onChange={() => setShowAllFiles((current) => !current)}
-            type="checkbox"
+            className={styles.searchInput}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Filter files..."
+            type="text"
+            value={searchQuery}
           />
-          View all files
-        </label>
+        </div>
       </div>
 
-      <button
-        className={styles.expandAllButton}
-        onClick={() =>
-          setExpandedPaths((current) =>
-            current.length === fileGroups.length ? [] : fileGroups.map((group) => group.path)
-          )
-        }
-        type="button"
-      >
-        Expand All
-      </button>
+      {viewMode === "tree" && !trimmedQuery ? (
+        <button
+          className={styles.expandAllButton}
+          onClick={() =>
+            setExpandedPaths((current) => (current.length === folderPaths.length ? [] : folderPaths))
+          }
+          type="button"
+        >
+          Expand All
+        </button>
+      ) : null}
 
       {filesError ? <p className={styles.emptyState}>{filesError}</p> : null}
 
-      <div className={styles.fileTree}>
-        {fileGroups.map((group) => {
-          const isExpanded = expandedPaths.includes(group.path);
-          const groupModifiedCount = countByChangeType(group.files, ["modified", "renamed"]);
-          const groupAddedCount = countByChangeType(group.files, ["added", "untracked"]);
-          const groupDeletedCount = countByChangeType(group.files, ["deleted"]);
+      {trimmedQuery && filteredFiles.length === 0 ? (
+        <p className={styles.emptyState}>No files match &quot;{searchQuery}&quot;.</p>
+      ) : null}
 
-          return (
-            <div className={styles.fileGroup} key={group.path}>
-              <button
-                className={styles.fileGroupHeader}
-                onClick={() => toggleExpanded(group.path)}
-                type="button"
-              >
-                {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                <span className={styles.fileGroupPath}>{group.path}</span>
-                {groupModifiedCount > 0 ? (
-                  <span className={styles.fileGroupStat}>
-                    <Pencil size={12} />
-                    {groupModifiedCount}
-                  </span>
-                ) : null}
-                {groupAddedCount > 0 ? (
-                  <span className={styles.fileGroupStatAdded}>
-                    <Plus size={12} />
-                    {groupAddedCount}
-                  </span>
-                ) : null}
-                {groupDeletedCount > 0 ? (
-                  <span className={styles.fileGroupStat}>
-                    <Trash2 size={12} />
-                    {groupDeletedCount}
-                  </span>
-                ) : null}
-              </button>
-
-              {isExpanded ? (
-                <ul className={styles.fileList}>
-                  {group.files.map((file) => (
-                    <li className={styles.fileListItem} key={file.path}>
-                      {file.path}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          );
-        })}
+      <div className={styles.fileTreeScroll}>
+        {trimmedQuery
+          ? filteredFiles.map(renderFileRow)
+          : viewMode === "tree"
+            ? (
+                <FileTreeView
+                  colorizeFileNames={colorizeFileNames}
+                  depth={0}
+                  entries={fileTree}
+                  expandedPaths={expandedPaths}
+                  onSelectFile={onSelectFile}
+                  onToggleFolder={toggleExpanded}
+                  selectedFilePath={selectedFilePath}
+                />
+              )
+            : sortedFiles.map(renderFileRow)}
       </div>
     </InfoCard>
   );
