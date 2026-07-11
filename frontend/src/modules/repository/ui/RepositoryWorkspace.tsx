@@ -32,6 +32,7 @@ export function RepositoryWorkspace({
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isDetailOpen, setIsDetailOpen] = useState(true);
   const [isBranchesOpen, setIsBranchesOpen] = useState(true);
   const [isStashOpen, setIsStashOpen] = useState(false);
   const detailPanelWidth = useResizableWidth({
@@ -112,44 +113,20 @@ export function RepositoryWorkspace({
     setSelectedCommitId(WORKING_CHANGES_COMMIT_ID);
   }
 
-  return (
-    <section
-      className={
-        isSidebarOpen
-          ? styles.workspace
-          : `${styles.workspace} ${styles.workspaceSidebarCollapsed}`
-      }
-    >
-      <aside
-        className={
-          isSidebarOpen
-            ? styles.sidebar
-            : `${styles.sidebar} ${styles.sidebarCollapsed}`
-        }
-        style={isSidebarOpen ? { width: sidebarWidth.width } : undefined}
-      >
-        {!isSidebarOpen ? (
-          <button
-            className={styles.sidebarCollapsedToggle}
-            onClick={() => setIsSidebarOpen(true)}
-            type="button"
-          >
-            <span className={styles.sidebarIconBadge}>{">"}</span>
-          </button>
-        ) : null}
+  const gridTemplateColumns = [
+    ...(isSidebarOpen ? ["auto", "10px"] : []),
+    "minmax(0, 1fr)",
+    ...(isDetailOpen ? ["10px", "auto"] : [])
+  ].join(" ");
 
-        {isSidebarOpen ? (
+  return (
+    <section className={styles.workspace} style={{ gridTemplateColumns }}>
+      {isSidebarOpen ? (
+        <aside className={styles.sidebar} style={{ width: sidebarWidth.width }}>
           <div className={styles.sidebarPanels}>
             <section className={styles.sidebarSection}>
               <div className={styles.sidebarSectionHeader}>
                 <div className={styles.sidebarSectionTitleRow}>
-                  <button
-                    className={styles.sidebarInlineCollapse}
-                    onClick={() => setIsSidebarOpen(false)}
-                    type="button"
-                  >
-                    <span className={styles.sidebarIconBadge}>{"<"}</span>
-                  </button>
                   <button
                     className={styles.sidebarSectionTitleButton}
                     onClick={() => setIsBranchesOpen((current) => !current)}
@@ -205,8 +182,8 @@ export function RepositoryWorkspace({
               ) : null}
             </section>
           </div>
-        ) : null}
-      </aside>
+        </aside>
+      ) : null}
 
       {isSidebarOpen ? (
         <ResizeHandle
@@ -217,6 +194,24 @@ export function RepositoryWorkspace({
       ) : null}
 
       <div className={styles.historyColumn}>
+        <button
+          aria-label={isSidebarOpen ? "Hide sidebar" : "Show sidebar"}
+          className={styles.sidebarToggleFloating}
+          onClick={() => setIsSidebarOpen((current) => !current)}
+          type="button"
+        >
+          <span className={styles.sidebarIconBadge}>{isSidebarOpen ? "<" : ">"}</span>
+        </button>
+
+        <button
+          aria-label={isDetailOpen ? "Hide commit detail panel" : "Show commit detail panel"}
+          className={styles.detailToggleFloating}
+          onClick={() => setIsDetailOpen((current) => !current)}
+          type="button"
+        >
+          <span className={styles.sidebarIconBadge}>{isDetailOpen ? ">" : "<"}</span>
+        </button>
+
         {selectedFilePath && selectedCommit ? (
           <FileDiffPanel
             commitId={selectedCommit.id}
@@ -236,21 +231,25 @@ export function RepositoryWorkspace({
         )}
       </div>
 
-      <ResizeHandle
-        className={styles.detailResizeHandle}
-        label="Resize commit detail panel"
-        onPointerDown={detailPanelWidth.startDragging}
-      />
-
-      <aside className={styles.detailColumn} style={{ width: detailPanelWidth.width }}>
-        <CommitDetailPanel
-          commit={selectedCommit}
-          onSelectFile={setSelectedFilePath}
-          onViewChanges={handleViewChanges}
-          repositoryPath={selectedRepository.path}
-          selectedFilePath={selectedFilePath}
+      {isDetailOpen ? (
+        <ResizeHandle
+          className={styles.detailResizeHandle}
+          label="Resize commit detail panel"
+          onPointerDown={detailPanelWidth.startDragging}
         />
-      </aside>
+      ) : null}
+
+      {isDetailOpen ? (
+        <aside className={styles.detailColumn} style={{ width: detailPanelWidth.width }}>
+          <CommitDetailPanel
+            commit={selectedCommit}
+            onSelectFile={setSelectedFilePath}
+            onViewChanges={handleViewChanges}
+            repositoryPath={selectedRepository.path}
+            selectedFilePath={selectedFilePath}
+          />
+        </aside>
+      ) : null}
     </section>
   );
 }
