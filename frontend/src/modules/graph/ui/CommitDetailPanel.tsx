@@ -8,6 +8,7 @@ import {
   Palette,
   Pencil,
   Plus,
+  Search,
   Sparkles,
   Trash2
 } from "lucide-react";
@@ -65,7 +66,7 @@ export function CommitDetailPanel({
 }: CommitDetailPanelProps) {
   const [viewMode, setViewMode] = useState<"tree" | "path">("tree");
   const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
-  const [showAllFiles, setShowAllFiles] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [colorizeFileNames, setColorizeFileNames] = useState(false);
   const [sortMode, setSortMode] = useState<FileSortMode>("az");
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
@@ -137,6 +138,35 @@ export function CommitDetailPanel({
 
   const parentShortId = commit.parents[0]?.slice(0, 7) ?? "—";
   const authorInitial = commit.authorName.charAt(0).toUpperCase() || "?";
+
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+  const filteredFiles = trimmedQuery
+    ? sortedFiles.filter((file) => file.path.toLowerCase().includes(trimmedQuery))
+    : [];
+
+  function renderFileRow(file: FileChange) {
+    return (
+      <button
+        className={file.path === selectedFilePath ? styles.fileListItemActive : styles.fileListItem}
+        key={file.path}
+        onClick={() => onSelectFile(file.path)}
+        type="button"
+      >
+        <span
+          className={
+            colorizeFileNames
+              ? `${styles.fileListItemName} ${styles[`statusBadge-${file.changeType}`]}`
+              : styles.fileListItemName
+          }
+        >
+          {file.path}
+        </span>
+        <span className={`${styles.statusBadge} ${styles[`statusBadge-${file.changeType}`]}`}>
+          {changeTypeLetter(file.changeType)}
+        </span>
+      </button>
+    );
+  }
 
   return (
     <InfoCard>
@@ -271,17 +301,19 @@ export function CommitDetailPanel({
           </button>
         </div>
 
-        <label className={styles.viewAllFiles}>
+        <div className={styles.searchBox}>
+          <Search size={14} />
           <input
-            checked={showAllFiles}
-            onChange={() => setShowAllFiles((current) => !current)}
-            type="checkbox"
+            className={styles.searchInput}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Filter files..."
+            type="text"
+            value={searchQuery}
           />
-          View all files
-        </label>
+        </div>
       </div>
 
-      {viewMode === "tree" ? (
+      {viewMode === "tree" && !trimmedQuery ? (
         <button
           className={styles.expandAllButton}
           onClick={() =>
@@ -295,40 +327,26 @@ export function CommitDetailPanel({
 
       {filesError ? <p className={styles.emptyState}>{filesError}</p> : null}
 
+      {trimmedQuery && filteredFiles.length === 0 ? (
+        <p className={styles.emptyState}>No files match &quot;{searchQuery}&quot;.</p>
+      ) : null}
+
       <div className={styles.fileTreeScroll}>
-        {viewMode === "tree" ? (
-          <FileTreeView
-            colorizeFileNames={colorizeFileNames}
-            depth={0}
-            entries={fileTree}
-            expandedPaths={expandedPaths}
-            onSelectFile={onSelectFile}
-            onToggleFolder={toggleExpanded}
-            selectedFilePath={selectedFilePath}
-          />
-        ) : (
-          sortedFiles.map((file) => (
-            <button
-              className={file.path === selectedFilePath ? styles.fileListItemActive : styles.fileListItem}
-              key={file.path}
-              onClick={() => onSelectFile(file.path)}
-              type="button"
-            >
-              <span
-                className={
-                  colorizeFileNames
-                    ? `${styles.fileListItemName} ${styles[`statusBadge-${file.changeType}`]}`
-                    : styles.fileListItemName
-                }
-              >
-                {file.path}
-              </span>
-              <span className={`${styles.statusBadge} ${styles[`statusBadge-${file.changeType}`]}`}>
-                {changeTypeLetter(file.changeType)}
-              </span>
-            </button>
-          ))
-        )}
+        {trimmedQuery
+          ? filteredFiles.map(renderFileRow)
+          : viewMode === "tree"
+            ? (
+                <FileTreeView
+                  colorizeFileNames={colorizeFileNames}
+                  depth={0}
+                  entries={fileTree}
+                  expandedPaths={expandedPaths}
+                  onSelectFile={onSelectFile}
+                  onToggleFolder={toggleExpanded}
+                  selectedFilePath={selectedFilePath}
+                />
+              )
+            : sortedFiles.map(renderFileRow)}
       </div>
     </InfoCard>
   );
