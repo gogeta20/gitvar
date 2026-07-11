@@ -8,6 +8,8 @@ use crate::app::commit_files::contracts::CommitFilesReader;
 use crate::app::commit_files::read_commit_files::read_commit_files;
 use crate::app::commits::contracts::CommitReader;
 use crate::app::commits::read_commits::read_commits;
+use crate::app::file_diff::contracts::FileDiffReader;
+use crate::app::file_diff::read_file_diff::read_file_diff;
 use crate::app::status::contracts::StatusReader;
 use crate::app::status::read_status::read_status;
 use crate::domain::branch::Branch;
@@ -21,6 +23,7 @@ pub fn serve(
     commit_reader: &dyn CommitReader,
     status_reader: &dyn StatusReader,
     commit_files_reader: &dyn CommitFilesReader,
+    file_diff_reader: &dyn FileDiffReader,
 ) -> Result<(), AppError> {
     let listener = TcpListener::bind("0.0.0.0:7878")
         .map_err(|error| AppError::IoError(error.to_string()))?;
@@ -46,6 +49,7 @@ pub fn serve(
             commit_reader,
             status_reader,
             commit_files_reader,
+            file_diff_reader,
         );
 
         stream
@@ -62,6 +66,7 @@ fn route_request(
     commit_reader: &dyn CommitReader,
     status_reader: &dyn StatusReader,
     commit_files_reader: &dyn CommitFilesReader,
+    file_diff_reader: &dyn FileDiffReader,
 ) -> String {
     let Some(first_line) = request.lines().next() else {
         return json_response(400, r#"{"error":"Invalid request."}"#);
@@ -89,6 +94,10 @@ fn route_request(
 
     if target.starts_with("/api/commit-files") {
         return handle_commit_files_request(target, commit_files_reader);
+    }
+
+    if target.starts_with("/api/file-diff") {
+        return handle_file_diff_request(target, file_diff_reader);
     }
 
     json_response(404, r#"{"error":"Not found."}"#)
@@ -147,6 +156,28 @@ fn handle_commit_files_request(target: &str, commit_files_reader: &dyn CommitFil
 
     match read_commit_files(commit_files_reader, &path, &commit_id) {
         Ok(files) => json_response(200, &format!(r#"{{"files":[{}]}}"#, file_changes_to_json(&files))),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_file_diff_request(target: &str, file_diff_reader: &dyn FileDiffReader) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    let Some(commit_id) = extract_query_param(target, "commitId") else {
+        return json_response(400, r#"{"error":"Missing commitId query parameter."}"#);
+    };
+
+    let Some(file_path) = extract_query_param(target, "path") else {
+        return json_response(400, r#"{"error":"Missing path query parameter."}"#);
+    };
+
+    match read_file_diff(file_diff_reader, &path, &commit_id, &file_path) {
+        Ok(diff) => json_response(200, &format!(r#"{{"diff":"{}"}}"#, escape_json(&diff))),
         Err(error) => json_response(
             500,
             &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),

@@ -2,6 +2,7 @@ import { BranchesPanel } from "@modules/branches/ui/BranchesPanel";
 import { Branch } from "@modules/branches/domain/branch";
 import { CommitDetailPanel } from "@modules/graph/ui/CommitDetailPanel";
 import { CommitGraphPanel } from "@modules/graph/ui/CommitGraphPanel";
+import { FileDiffPanel } from "@modules/graph/ui/FileDiffPanel";
 import { GraphCommit } from "@modules/graph/domain/commit";
 import { useEffect, useMemo, useState } from "react";
 import { InfoCard } from "@core/components/InfoCard";
@@ -27,6 +28,7 @@ export function RepositoryWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [graphCommits, setGraphCommits] = useState<GraphCommit[]>([]);
   const [selectedCommitId, setSelectedCommitId] = useState<string | null>(null);
+  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isBranchesOpen, setIsBranchesOpen] = useState(true);
@@ -59,7 +61,12 @@ export function RepositoryWorkspace({
   useEffect(() => {
     setSelectedBranch(null);
     setSelectedCommitId(null);
+    setSelectedFilePath(null);
   }, [selectedRepositoryId]);
+
+  useEffect(() => {
+    setSelectedFilePath(null);
+  }, [selectedCommitId]);
 
   const selectedRepository = useMemo<RepositorySummary | null>(() => {
     if (!workspace || !selectedRepositoryId) {
@@ -188,14 +195,23 @@ export function RepositoryWorkspace({
       </aside>
 
       <div className={styles.historyColumn}>
-        <CommitGraphPanel
-          onCommitsLoaded={setGraphCommits}
-          onSelectCommit={setSelectedCommitId}
-          repositoryPath={selectedRepository.path}
-          selectedBranchName={selectedBranch?.name ?? null}
-          selectedBranchTargetCommit={selectedBranch?.targetCommit ?? null}
-          selectedCommitId={selectedCommitId}
-        />
+        {selectedFilePath && selectedCommit ? (
+          <FileDiffPanel
+            commitId={selectedCommit.id}
+            filePath={selectedFilePath}
+            onClose={() => setSelectedFilePath(null)}
+            repositoryPath={selectedRepository.path}
+          />
+        ) : (
+          <CommitGraphPanel
+            onCommitsLoaded={setGraphCommits}
+            onSelectCommit={setSelectedCommitId}
+            repositoryPath={selectedRepository.path}
+            selectedBranchName={selectedBranch?.name ?? null}
+            selectedBranchTargetCommit={selectedBranch?.targetCommit ?? null}
+            selectedCommitId={selectedCommitId}
+          />
+        )}
       </div>
 
       <ResizeHandle
@@ -205,7 +221,11 @@ export function RepositoryWorkspace({
       />
 
       <aside className={styles.detailColumn} style={{ width: detailPanelWidth.width }}>
-        <CommitDetailPanel commit={selectedCommit} repositoryPath={selectedRepository.path} />
+        <CommitDetailPanel
+          commit={selectedCommit}
+          onSelectFile={setSelectedFilePath}
+          repositoryPath={selectedRepository.path}
+        />
 
         <InfoCard title="Operation preview">
           <p className={styles.previewCopy}>

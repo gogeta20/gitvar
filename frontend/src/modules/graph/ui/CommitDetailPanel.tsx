@@ -24,6 +24,7 @@ import styles from "./CommitDetailPanel.module.css";
 interface CommitDetailPanelProps {
   commit: GraphCommit | null;
   repositoryPath: string;
+  onSelectFile: (filePath: string) => void;
 }
 
 function formatAuthoredDate(input: string): string {
@@ -44,7 +45,7 @@ function formatAuthoredDate(input: string): string {
     .replace(",", " @");
 }
 
-export function CommitDetailPanel({ commit, repositoryPath }: CommitDetailPanelProps) {
+export function CommitDetailPanel({ commit, repositoryPath, onSelectFile }: CommitDetailPanelProps) {
   const [viewMode, setViewMode] = useState<"tree" | "path">("tree");
   const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
   const [showAllFiles, setShowAllFiles] = useState(false);
@@ -269,8 +270,14 @@ export function CommitDetailPanel({ commit, repositoryPath }: CommitDetailPanelP
               {isExpanded ? (
                 <ul className={styles.fileList}>
                   {group.files.map((file) => (
-                    <li className={styles.fileListItem} key={file.path}>
-                      {file.path}
+                    <li key={file.path}>
+                      <button
+                        className={styles.fileListItem}
+                        onClick={() => onSelectFile(file.path)}
+                        type="button"
+                      >
+                        {file.path}
+                      </button>
                     </li>
                   ))}
                 </ul>
