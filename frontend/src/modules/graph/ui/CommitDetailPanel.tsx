@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { InfoCard } from "@core/components/InfoCard";
 import { Tooltip } from "@core/components/Tooltip";
+import { usePersistedState } from "@core/hooks/usePersistedState";
 import { readCommitFiles } from "@modules/graph/application/use-cases/readCommitFiles";
 import { readStatus } from "@modules/graph/application/use-cases/readStatus";
 import { GraphCommit } from "@modules/graph/domain/commit";
@@ -64,12 +65,24 @@ export function CommitDetailPanel({
   selectedFilePath,
   onSelectFile
 }: CommitDetailPanelProps) {
-  const [viewMode, setViewMode] = useState<"tree" | "path">("tree");
+  const [viewMode, setViewMode] = usePersistedState<"tree" | "path">(
+    "gitmap.commitDetail.viewMode",
+    "tree"
+  );
   const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [colorizeFileNames, setColorizeFileNames] = useState(false);
-  const [sortMode, setSortMode] = useState<FileSortMode>("az");
-  const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
+  const [colorizeFileNames, setColorizeFileNames] = usePersistedState(
+    "gitmap.commitDetail.colorizeFileNames",
+    false
+  );
+  const [sortMode, setSortMode] = usePersistedState<FileSortMode>(
+    "gitmap.commitDetail.sortMode",
+    "az"
+  );
+  const [isSummaryExpanded, setIsSummaryExpanded] = usePersistedState(
+    "gitmap.commitDetail.summaryExpanded",
+    true
+  );
   const [workingStatus, setWorkingStatus] = useState<WorkingStatus | null>(null);
   const [commitFiles, setCommitFiles] = useState<FileChange[]>([]);
   const [filesError, setFilesError] = useState<string | null>(null);

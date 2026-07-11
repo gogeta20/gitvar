@@ -7,6 +7,7 @@ mod parse_commit_log;
 mod parse_branch_refs;
 mod parse_name_status;
 mod parse_porcelain_status;
+mod read_commit_parents;
 
 pub use git_cli_branch_reader::GitCliBranchReader;
 pub use git_cli_commit_files_reader::GitCliCommitFilesReader;
