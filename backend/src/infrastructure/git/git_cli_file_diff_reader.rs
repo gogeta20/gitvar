@@ -5,6 +5,7 @@ use std::process::Command;
 use crate::app::file_diff::contracts::FileDiffReader;
 use crate::domain::errors::AppError;
 use crate::domain::working_status::WORKING_CHANGES_COMMIT_ID;
+use crate::infrastructure::git::read_commit_parents::read_commit_parents;
 
 pub struct GitCliFileDiffReader;
 
@@ -25,11 +26,21 @@ impl FileDiffReader for GitCliFileDiffReader {
             return read_working_directory_diff(repository_path, file_path);
         }
 
-        let output = Command::new("git")
-            .args(["show", "--no-color", commit_id, "--", file_path])
-            .current_dir(repository_path)
-            .output()
-            .map_err(|error| AppError::IoError(error.to_string()))?;
+        let parents = read_commit_parents(repository_path, commit_id)?;
+
+        let output = if parents.len() > 1 {
+            Command::new("git")
+                .args(["diff", "--no-color", &parents[0], commit_id, "--", file_path])
+                .current_dir(repository_path)
+                .output()
+                .map_err(|error| AppError::IoError(error.to_string()))?
+        } else {
+            Command::new("git")
+                .args(["show", "--no-color", commit_id, "--", file_path])
+                .current_dir(repository_path)
+                .output()
+                .map_err(|error| AppError::IoError(error.to_string()))?
+        };
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
