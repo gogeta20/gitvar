@@ -5,12 +5,14 @@ import {
   ChevronRight,
   FolderTree,
   List,
+  Palette,
   Pencil,
   Plus,
   Sparkles,
   Trash2
 } from "lucide-react";
 import { InfoCard } from "@core/components/InfoCard";
+import { Tooltip } from "@core/components/Tooltip";
 import { readCommitFiles } from "@modules/graph/application/use-cases/readCommitFiles";
 import { readStatus } from "@modules/graph/application/use-cases/readStatus";
 import { GraphCommit } from "@modules/graph/domain/commit";
@@ -18,7 +20,16 @@ import { FileChange } from "@modules/graph/domain/fileChange";
 import { WorkingStatus } from "@modules/graph/domain/workingStatus";
 import { createCommitFilesReader } from "@modules/graph/infrastructure/CommitFilesReaderProvider";
 import { createStatusReader } from "@modules/graph/infrastructure/StatusReaderProvider";
-import { countByChangeType, groupFileChanges, groupPathForFile } from "@modules/graph/lib/groupFileChanges";
+import { ancestorFolderPaths, buildFileTree, collectFolderPaths } from "@modules/graph/lib/buildFileTree";
+import { changeTypeLetter } from "@modules/graph/lib/changeTypeLetter";
+import { countByChangeType } from "@modules/graph/lib/countByChangeType";
+import {
+  compareFilesBySortMode,
+  FileSortMode,
+  nextSortMode,
+  sortModeLabel
+} from "@modules/graph/lib/fileSort";
+import { FileTreeView } from "@modules/graph/ui/FileTreeView";
 import styles from "./CommitDetailPanel.module.css";
 
 interface CommitDetailPanelProps {
@@ -55,6 +66,8 @@ export function CommitDetailPanel({
   const [viewMode, setViewMode] = useState<"tree" | "path">("tree");
   const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
   const [showAllFiles, setShowAllFiles] = useState(false);
+  const [colorizeFileNames, setColorizeFileNames] = useState(false);
+  const [sortMode, setSortMode] = useState<FileSortMode>("az");
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
   const [workingStatus, setWorkingStatus] = useState<WorkingStatus | null>(null);
   const [commitFiles, setCommitFiles] = useState<FileChange[]>([]);
@@ -93,10 +106,8 @@ export function CommitDetailPanel({
       return;
     }
 
-    const groupPath = groupPathForFile(selectedFilePath);
-    setExpandedPaths((current) =>
-      current.includes(groupPath) ? current : [...current, groupPath]
-    );
+    const ancestors = ancestorFolderPaths(selectedFilePath);
+    setExpandedPaths((current) => Array.from(new Set([...current, ...ancestors])));
   }, [selectedFilePath]);
 
   function toggleExpanded(path: string) {
@@ -116,7 +127,10 @@ export function CommitDetailPanel({
   }
 
   const files = commit.isWorkingChanges ? workingStatus?.changedFiles ?? [] : commitFiles;
-  const fileGroups = groupFileChanges(files);
+  const compareFiles = compareFilesBySortMode(sortMode);
+  const sortedFiles = [...files].sort(compareFiles);
+  const fileTree = buildFileTree(files, compareFiles);
+  const folderPaths = collectFolderPaths(fileTree);
   const modifiedCount = countByChangeType(files, ["modified", "renamed"]);
   const addedCount = countByChangeType(files, ["added", "untracked"]);
   const deletedCount = countByChangeType(files, ["deleted"]);
@@ -215,8 +229,27 @@ export function CommitDetailPanel({
       </div>
 
       <div className={styles.fileToolbar}>
-        <button aria-label="Sort files" className={styles.toolbarIconButton} type="button">
-          <ArrowUpDown size={14} />
+        <Tooltip items={[sortModeLabel(sortMode)]}>
+          <button
+            aria-label="Sort files"
+            className={styles.toolbarIconButton}
+            onClick={() => setSortMode((current) => nextSortMode(current))}
+            type="button"
+          >
+            <ArrowUpDown size={14} />
+          </button>
+        </Tooltip>
+
+        <button
+          aria-label="Colorize file names by change type"
+          aria-pressed={colorizeFileNames}
+          className={
+            colorizeFileNames ? styles.toolbarIconButtonActive : styles.toolbarIconButton
+          }
+          onClick={() => setColorizeFileNames((current) => !current)}
+          type="button"
+        >
+          <Palette size={14} />
         </button>
 
         <div className={styles.viewModeToggle}>
@@ -248,78 +281,54 @@ export function CommitDetailPanel({
         </label>
       </div>
 
-      <button
-        className={styles.expandAllButton}
-        onClick={() =>
-          setExpandedPaths((current) =>
-            current.length === fileGroups.length ? [] : fileGroups.map((group) => group.path)
-          )
-        }
-        type="button"
-      >
-        Expand All
-      </button>
+      {viewMode === "tree" ? (
+        <button
+          className={styles.expandAllButton}
+          onClick={() =>
+            setExpandedPaths((current) => (current.length === folderPaths.length ? [] : folderPaths))
+          }
+          type="button"
+        >
+          Expand All
+        </button>
+      ) : null}
 
       {filesError ? <p className={styles.emptyState}>{filesError}</p> : null}
 
       <div className={styles.fileTreeScroll}>
-        {fileGroups.map((group) => {
-          const isExpanded = expandedPaths.includes(group.path);
-          const groupModifiedCount = countByChangeType(group.files, ["modified", "renamed"]);
-          const groupAddedCount = countByChangeType(group.files, ["added", "untracked"]);
-          const groupDeletedCount = countByChangeType(group.files, ["deleted"]);
-
-          return (
-            <div className={styles.fileGroup} key={group.path}>
-              <button
-                className={styles.fileGroupHeader}
-                onClick={() => toggleExpanded(group.path)}
-                type="button"
+        {viewMode === "tree" ? (
+          <FileTreeView
+            colorizeFileNames={colorizeFileNames}
+            depth={0}
+            entries={fileTree}
+            expandedPaths={expandedPaths}
+            onSelectFile={onSelectFile}
+            onToggleFolder={toggleExpanded}
+            selectedFilePath={selectedFilePath}
+          />
+        ) : (
+          sortedFiles.map((file) => (
+            <button
+              className={file.path === selectedFilePath ? styles.fileListItemActive : styles.fileListItem}
+              key={file.path}
+              onClick={() => onSelectFile(file.path)}
+              type="button"
+            >
+              <span
+                className={
+                  colorizeFileNames
+                    ? `${styles.fileListItemName} ${styles[`statusBadge-${file.changeType}`]}`
+                    : styles.fileListItemName
+                }
               >
-                {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                <span className={styles.fileGroupPath}>{group.path}</span>
-                {groupModifiedCount > 0 ? (
-                  <span className={styles.fileGroupStat}>
-                    <Pencil size={12} />
-                    {groupModifiedCount}
-                  </span>
-                ) : null}
-                {groupAddedCount > 0 ? (
-                  <span className={styles.fileGroupStatAdded}>
-                    <Plus size={12} />
-                    {groupAddedCount}
-                  </span>
-                ) : null}
-                {groupDeletedCount > 0 ? (
-                  <span className={styles.fileGroupStat}>
-                    <Trash2 size={12} />
-                    {groupDeletedCount}
-                  </span>
-                ) : null}
-              </button>
-
-              {isExpanded ? (
-                <ul className={styles.fileList}>
-                  {group.files.map((file) => (
-                    <li key={file.path}>
-                      <button
-                        className={
-                          file.path === selectedFilePath
-                            ? styles.fileListItemActive
-                            : styles.fileListItem
-                        }
-                        onClick={() => onSelectFile(file.path)}
-                        type="button"
-                      >
-                        {file.path}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          );
-        })}
+                {file.path}
+              </span>
+              <span className={`${styles.statusBadge} ${styles[`statusBadge-${file.changeType}`]}`}>
+                {changeTypeLetter(file.changeType)}
+              </span>
+            </button>
+          ))
+        )}
       </div>
     </InfoCard>
   );

@@ -197,6 +197,19 @@
   color: var(--color-text-primary);
 }
 
+.toolbarIconButtonActive {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 8px;
+  background: var(--color-badge-accent);
+  color: var(--color-badge-accent-text);
+  cursor: pointer;
+}
+
 .viewModeToggle {
   display: inline-flex;
   border: 1px solid var(--color-border-default);
@@ -256,10 +269,6 @@
   overflow-y: auto;
 }
 
-.fileGroup {
-  border-radius: 8px;
-}
-
 .fileGroupHeader {
   display: flex;
   align-items: center;
@@ -297,24 +306,25 @@
   color: var(--color-graph-lane-1);
 }
 
-.fileList {
-  margin: 0;
-  padding: 2px 0 6px 34px;
-  list-style: none;
-  display: grid;
-  gap: 4px;
-}
-
-.fileListItem {
+.fileListItem,
+.fileListItemActive {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
   border: 0;
-  background: transparent;
-  color: var(--color-text-secondary);
   font: inherit;
   font-size: 12px;
   text-align: left;
   padding: 2px 6px;
   border-radius: 6px;
   cursor: pointer;
+}
+
+.fileListItem {
+  background: transparent;
+  color: var(--color-text-secondary);
 }
 
 .fileListItem:hover {
@@ -323,14 +333,33 @@
 }
 
 .fileListItemActive {
-  border: 0;
   background: var(--color-badge-accent);
   color: var(--color-badge-accent-text);
-  font: inherit;
-  font-size: 12px;
   font-weight: 600;
-  text-align: left;
-  padding: 2px 6px;
-  border-radius: 6px;
-  cursor: pointer;
+}
+
+.fileListItemName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statusBadge {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.statusBadge-added,
+.statusBadge-untracked {
+  color: var(--color-graph-lane-1);
+}
+
+.statusBadge-modified,
+.statusBadge-renamed {
+  color: var(--color-graph-lane-2);
+}
+
+.statusBadge-deleted {
+  color: var(--color-graph-lane-3);
 }
