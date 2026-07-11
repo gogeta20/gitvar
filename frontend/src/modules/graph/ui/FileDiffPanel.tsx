@@ -36,6 +36,7 @@ export function FileDiffPanel({ repositoryPath, commitId, filePath, onClose }: F
 
   return (
     <InfoCard
+      fillHeight
       headerActions={
         <button className={styles.backButton} onClick={onClose} type="button">
           <ArrowLeft size={14} />

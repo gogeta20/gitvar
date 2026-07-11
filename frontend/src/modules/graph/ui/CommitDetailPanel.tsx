@@ -8,10 +8,11 @@ import {
   Palette,
   Pencil,
   Plus,
+  RotateCcw,
   Search,
-  Sparkles,
   Trash2
 } from "lucide-react";
+import { CopyableHash } from "@core/components/CopyableHash";
 import { InfoCard } from "@core/components/InfoCard";
 import { Tooltip } from "@core/components/Tooltip";
 import { usePersistedState } from "@core/hooks/usePersistedState";
@@ -39,7 +40,16 @@ interface CommitDetailPanelProps {
   repositoryPath: string;
   selectedFilePath: string | null;
   onSelectFile: (filePath: string) => void;
+  onViewChanges: () => void;
 }
+
+type StatusFilterKey = "modified" | "added" | "deleted";
+
+const STATUS_FILTER_CHANGE_TYPES: Record<StatusFilterKey, FileChange["changeType"][]> = {
+  modified: ["modified", "renamed"],
+  added: ["added", "untracked"],
+  deleted: ["deleted"]
+};
 
 function formatAuthoredDate(input: string): string {
   const date = new Date(input);
@@ -63,7 +73,8 @@ export function CommitDetailPanel({
   commit,
   repositoryPath,
   selectedFilePath,
-  onSelectFile
+  onSelectFile,
+  onViewChanges
 }: CommitDetailPanelProps) {
   const [viewMode, setViewMode] = usePersistedState<"tree" | "path">(
     "gitmap.commitDetail.viewMode",
@@ -71,6 +82,7 @@ export function CommitDetailPanel({
   );
   const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilters, setStatusFilters] = useState<Set<StatusFilterKey>>(new Set());
   const [colorizeFileNames, setColorizeFileNames] = usePersistedState(
     "gitmap.commitDetail.colorizeFileNames",
     false
@@ -124,15 +136,34 @@ export function CommitDetailPanel({
     setExpandedPaths((current) => Array.from(new Set([...current, ...ancestors])));
   }, [selectedFilePath]);
 
+  useEffect(() => {
+    setStatusFilters(new Set());
+    setSearchQuery("");
+  }, [commit?.id]);
+
   function toggleExpanded(path: string) {
     setExpandedPaths((current) =>
       current.includes(path) ? current.filter((item) => item !== path) : [...current, path]
     );
   }
 
+  function toggleStatusFilter(key: StatusFilterKey) {
+    setStatusFilters((current) => {
+      const next = new Set(current);
+
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+
+      return next;
+    });
+  }
+
   if (!commit) {
     return (
-      <InfoCard title="Commit detail">
+      <InfoCard fillHeight title="Commit detail">
         <p className={styles.emptyState}>
           Select a commit from the graph to inspect its details.
         </p>
@@ -141,13 +172,22 @@ export function CommitDetailPanel({
   }
 
   const files = commit.isWorkingChanges ? workingStatus?.changedFiles ?? [] : commitFiles;
-  const compareFiles = compareFilesBySortMode(sortMode);
-  const sortedFiles = [...files].sort(compareFiles);
-  const fileTree = buildFileTree(files, compareFiles);
-  const folderPaths = collectFolderPaths(fileTree);
   const modifiedCount = countByChangeType(files, ["modified", "renamed"]);
   const addedCount = countByChangeType(files, ["added", "untracked"]);
   const deletedCount = countByChangeType(files, ["deleted"]);
+
+  const allowedChangeTypes =
+    statusFilters.size > 0
+      ? Array.from(statusFilters).flatMap((key) => STATUS_FILTER_CHANGE_TYPES[key])
+      : null;
+  const filesForList = allowedChangeTypes
+    ? files.filter((file) => allowedChangeTypes.includes(file.changeType))
+    : files;
+
+  const compareFiles = compareFilesBySortMode(sortMode);
+  const sortedFiles = [...filesForList].sort(compareFiles);
+  const fileTree = buildFileTree(filesForList, compareFiles);
+  const folderPaths = collectFolderPaths(fileTree);
 
   const parentShortId = commit.parents[0]?.slice(0, 7) ?? "—";
   const authorInitial = commit.authorName.charAt(0).toUpperCase() || "?";
@@ -182,16 +222,19 @@ export function CommitDetailPanel({
   }
 
   return (
-    <InfoCard>
-      {workingStatus?.isDirty ? (
-        <div className={styles.workingDirectoryBanner}>
-          <span>{workingStatus.changedFiles.length} file changes in working directory</span>
-          <button className={styles.viewChangesButton} type="button">
-            View Changes
-          </button>
-        </div>
-      ) : null}
-
+    <InfoCard
+      banner={
+        workingStatus?.isDirty && !commit.isWorkingChanges ? (
+          <div className={styles.workingDirectoryBanner}>
+            <span>{workingStatus.changedFiles.length} file changes in working directory</span>
+            <button className={styles.viewChangesButton} onClick={onViewChanges} type="button">
+              View Changes
+            </button>
+          </div>
+        ) : null
+      }
+      fillHeight
+    >
       <button
         className={styles.summaryToggle}
         onClick={() => setIsSummaryExpanded((current) => !current)}
@@ -205,20 +248,10 @@ export function CommitDetailPanel({
         <>
           <div className={styles.commitBar}>
             <span className={styles.commitBarLabel}>
-              {commit.isWorkingChanges ? (
-                "Working directory"
-              ) : (
-                <>
-                  commit: <span className={styles.commitBarHash}>{commit.shortId}</span>
-                </>
-              )}
+              {commit.isWorkingChanges ? "Working directory" : "commit"}
             </span>
             {!commit.isWorkingChanges ? (
-              <button className={styles.aiButton} type="button">
-                <Sparkles size={14} />
-                Recompose commit with AI
-                <ChevronDown size={14} />
-              </button>
+              <CopyableHash fullHash={commit.id} displayHash={commit.shortId} />
             ) : null}
           </div>
 
@@ -244,7 +277,14 @@ export function CommitDetailPanel({
                   </div>
                 </div>
               </div>
-              <span className={styles.parentLabel}>parent: {parentShortId}</span>
+              <span className={styles.parentLabel}>
+                parent:{" "}
+                {commit.parents[0] ? (
+                  <CopyableHash fullHash={commit.parents[0]} displayHash={parentShortId} />
+                ) : (
+                  parentShortId
+                )}
+              </span>
             </div>
           ) : null}
         </>
@@ -252,22 +292,51 @@ export function CommitDetailPanel({
 
       <div className={styles.statsRow}>
         {modifiedCount > 0 ? (
-          <span className={styles.statItem}>
+          <button
+            aria-pressed={statusFilters.has("modified")}
+            className={
+              statusFilters.has("modified") ? styles.statItemActive : styles.statItem
+            }
+            onClick={() => toggleStatusFilter("modified")}
+            type="button"
+          >
             <Pencil size={13} />
             {modifiedCount} modified
-          </span>
+          </button>
         ) : null}
         {addedCount > 0 ? (
-          <span className={styles.statItem}>
+          <button
+            aria-pressed={statusFilters.has("added")}
+            className={statusFilters.has("added") ? styles.statItemActive : styles.statItem}
+            onClick={() => toggleStatusFilter("added")}
+            type="button"
+          >
             <Plus size={13} />
             {addedCount} added
-          </span>
+          </button>
         ) : null}
         {deletedCount > 0 ? (
-          <span className={styles.statItem}>
+          <button
+            aria-pressed={statusFilters.has("deleted")}
+            className={
+              statusFilters.has("deleted") ? styles.statItemActive : styles.statItem
+            }
+            onClick={() => toggleStatusFilter("deleted")}
+            type="button"
+          >
             <Trash2 size={13} />
             {deletedCount} deleted
-          </span>
+          </button>
+        ) : null}
+        {statusFilters.size > 0 ? (
+          <button
+            aria-label="Clear status filters"
+            className={styles.statFilterReset}
+            onClick={() => setStatusFilters(new Set())}
+            type="button"
+          >
+            <RotateCcw size={13} />
+          </button>
         ) : null}
       </div>
 

@@ -4,6 +4,7 @@ import { CommitDetailPanel } from "@modules/graph/ui/CommitDetailPanel";
 import { CommitGraphPanel } from "@modules/graph/ui/CommitGraphPanel";
 import { FileDiffPanel } from "@modules/graph/ui/FileDiffPanel";
 import { GraphCommit } from "@modules/graph/domain/commit";
+import { WORKING_CHANGES_COMMIT_ID } from "@modules/graph/domain/workingStatus";
 import { useEffect, useMemo, useState } from "react";
 import { InfoCard } from "@core/components/InfoCard";
 import { ResizeHandle } from "@core/components/ResizeHandle";
@@ -97,6 +98,11 @@ export function RepositoryWorkspace({
   function handleSelectBranch(branch: Branch) {
     setSelectedBranch(branch);
     setSelectedCommitId(branch.targetCommit);
+  }
+
+  function handleViewChanges() {
+    setSelectedFilePath(null);
+    setSelectedCommitId(WORKING_CHANGES_COMMIT_ID);
   }
 
   return (
@@ -224,21 +230,10 @@ export function RepositoryWorkspace({
         <CommitDetailPanel
           commit={selectedCommit}
           onSelectFile={setSelectedFilePath}
+          onViewChanges={handleViewChanges}
           repositoryPath={selectedRepository.path}
           selectedFilePath={selectedFilePath}
         />
-
-        <InfoCard title="Operation preview">
-          <p className={styles.previewCopy}>
-            Future actions like merge, rebase and reset should explain their impact here
-            before touching the repository.
-          </p>
-          <ul className={styles.previewList}>
-            <li>Show branch movement before execution.</li>
-            <li>Estimate commits rewritten or dropped.</li>
-            <li>Store a local undo log for risky operations.</li>
-          </ul>
-        </InfoCard>
       </aside>
     </section>
   );

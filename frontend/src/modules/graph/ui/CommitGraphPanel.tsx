@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { InfoCard } from "@core/components/InfoCard";
+import { usePersistedState } from "@core/hooks/usePersistedState";
 import { readCommits } from "@modules/graph/application/use-cases/readCommits";
 import { readStatus } from "@modules/graph/application/use-cases/readStatus";
 import { Commit, GraphCommit } from "@modules/graph/domain/commit";
@@ -32,9 +33,9 @@ export function CommitGraphPanel({
   const [commits, setCommits] = useState<Commit[]>([]);
   const [workingStatus, setWorkingStatus] = useState<WorkingStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showAuthor, setShowAuthor] = useState(true);
-  const [showDate, setShowDate] = useState(true);
-  const [showMessage, setShowMessage] = useState(true);
+  const [showAuthor, setShowAuthor] = usePersistedState("gitmap.historyMap.showAuthor", true);
+  const [showDate, setShowDate] = usePersistedState("gitmap.historyMap.showDate", true);
+  const [showMessage, setShowMessage] = usePersistedState("gitmap.historyMap.showMessage", true);
 
   useEffect(() => {
     const commitReader = createCommitReader();
@@ -107,6 +108,7 @@ export function CommitGraphPanel({
 
   return (
     <InfoCard
+      fillHeight
       headerActions={
         <HistoryMapOptionsMenu
           onToggleAuthor={() => setShowAuthor((current) => !current)}
