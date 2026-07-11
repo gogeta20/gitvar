@@ -4,6 +4,7 @@ use std::process::Command;
 use crate::app::status::contracts::StatusReader;
 use crate::domain::errors::AppError;
 use crate::domain::working_status::WorkingStatus;
+use crate::infrastructure::git::parse_porcelain_status::parse_porcelain_status;
 
 pub struct GitCliStatusReader;
 
@@ -28,9 +29,9 @@ impl StatusReader for GitCliStatusReader {
             return Err(AppError::GitCommandFailed(stderr));
         }
 
-        let is_dirty = !String::from_utf8_lossy(&porcelain_output.stdout)
-            .trim()
-            .is_empty();
+        let porcelain_stdout = String::from_utf8_lossy(&porcelain_output.stdout);
+        let is_dirty = !porcelain_stdout.trim().is_empty();
+        let changed_files = parse_porcelain_status(&porcelain_stdout);
 
         let head_output = Command::new("git")
             .args(["rev-parse", "HEAD"])
@@ -52,6 +53,7 @@ impl StatusReader for GitCliStatusReader {
         Ok(WorkingStatus {
             is_dirty,
             head_commit_id,
+            changed_files,
         })
     }
 }

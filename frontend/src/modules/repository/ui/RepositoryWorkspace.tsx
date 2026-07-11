@@ -205,7 +205,7 @@ export function RepositoryWorkspace({
       />
 
       <aside className={styles.detailColumn} style={{ width: detailPanelWidth.width }}>
-        <CommitDetailPanel commit={selectedCommit} />
+        <CommitDetailPanel commit={selectedCommit} repositoryPath={selectedRepository.path} />
 
         <InfoCard title="Operation preview">
           <p className={styles.previewCopy}>

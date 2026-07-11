@@ -4,6 +4,8 @@ use std::path::PathBuf;
 
 use crate::app::branches::contracts::BranchReader;
 use crate::app::branches::read_branches::read_branches;
+use crate::app::commit_files::contracts::CommitFilesReader;
+use crate::app::commit_files::read_commit_files::read_commit_files;
 use crate::app::commits::contracts::CommitReader;
 use crate::app::commits::read_commits::read_commits;
 use crate::app::status::contracts::StatusReader;
@@ -11,12 +13,14 @@ use crate::app::status::read_status::read_status;
 use crate::domain::branch::Branch;
 use crate::domain::commit::Commit;
 use crate::domain::errors::AppError;
+use crate::domain::file_change::{FileChange, FileChangeType};
 use crate::domain::working_status::WorkingStatus;
 
 pub fn serve(
     branch_reader: &dyn BranchReader,
     commit_reader: &dyn CommitReader,
     status_reader: &dyn StatusReader,
+    commit_files_reader: &dyn CommitFilesReader,
 ) -> Result<(), AppError> {
     let listener = TcpListener::bind("0.0.0.0:7878")
         .map_err(|error| AppError::IoError(error.to_string()))?;
@@ -36,7 +40,13 @@ pub fn serve(
         }
 
         let request = String::from_utf8_lossy(&buffer[..bytes_read]);
-        let response = route_request(&request, branch_reader, commit_reader, status_reader);
+        let response = route_request(
+            &request,
+            branch_reader,
+            commit_reader,
+            status_reader,
+            commit_files_reader,
+        );
 
         stream
             .write_all(response.as_bytes())
@@ -51,6 +61,7 @@ fn route_request(
     branch_reader: &dyn BranchReader,
     commit_reader: &dyn CommitReader,
     status_reader: &dyn StatusReader,
+    commit_files_reader: &dyn CommitFilesReader,
 ) -> String {
     let Some(first_line) = request.lines().next() else {
         return json_response(400, r#"{"error":"Invalid request."}"#);
@@ -74,6 +85,10 @@ fn route_request(
 
     if target.starts_with("/api/status") {
         return handle_status_request(target, status_reader);
+    }
+
+    if target.starts_with("/api/commit-files") {
+        return handle_commit_files_request(target, commit_files_reader);
     }
 
     json_response(404, r#"{"error":"Not found."}"#)
@@ -121,14 +136,36 @@ fn handle_status_request(target: &str, status_reader: &dyn StatusReader) -> Stri
     }
 }
 
-fn extract_repo_path(target: &str) -> Option<PathBuf> {
-    let query = target.split('?').nth(1)?;
-    let repo_path = query
-        .split('&')
-        .find_map(|part| part.strip_prefix("repoPath="))
-        .map(percent_decode)?;
+fn handle_commit_files_request(target: &str, commit_files_reader: &dyn CommitFilesReader) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
 
-    Some(PathBuf::from(repo_path))
+    let Some(commit_id) = extract_query_param(target, "commitId") else {
+        return json_response(400, r#"{"error":"Missing commitId query parameter."}"#);
+    };
+
+    match read_commit_files(commit_files_reader, &path, &commit_id) {
+        Ok(files) => json_response(200, &format!(r#"{{"files":[{}]}}"#, file_changes_to_json(&files))),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn extract_repo_path(target: &str) -> Option<PathBuf> {
+    extract_query_param(target, "repoPath").map(PathBuf::from)
+}
+
+fn extract_query_param(target: &str, key: &str) -> Option<String> {
+    let query = target.split('?').nth(1)?;
+    let prefix = format!("{key}=");
+
+    query
+        .split('&')
+        .find_map(|part| part.strip_prefix(prefix.as_str()))
+        .map(percent_decode)
 }
 
 fn branches_to_json(branches: &[Branch]) -> String {
@@ -208,12 +245,38 @@ fn status_to_json(status: &WorkingStatus) -> String {
         concat!(
             "{{",
             r#""isDirty":{},"#,
-            r#""headCommitId":"{}""#,
+            r#""headCommitId":"{}","#,
+            r#""changedFiles":[{}]"#,
             "}}"
         ),
         status.is_dirty,
         escape_json(&status.head_commit_id),
+        file_changes_to_json(&status.changed_files),
     )
+}
+
+fn file_changes_to_json(files: &[FileChange]) -> String {
+    files
+        .iter()
+        .map(|file| {
+            format!(
+                r#"{{"path":"{}","changeType":"{}"}}"#,
+                escape_json(&file.path),
+                file_change_type_to_json(file.change_type),
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+fn file_change_type_to_json(change_type: FileChangeType) -> &'static str {
+    match change_type {
+        FileChangeType::Added => "added",
+        FileChangeType::Modified => "modified",
+        FileChangeType::Deleted => "deleted",
+        FileChangeType::Renamed => "renamed",
+        FileChangeType::Untracked => "untracked",
+    }
 }
 
 fn json_response(status_code: u16, body: &str) -> String {
