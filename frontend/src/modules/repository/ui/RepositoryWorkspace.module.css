@@ -30,51 +30,9 @@
   overflow: hidden;
 }
 
-.historyColumn {
-  position: relative;
-}
-
-.sidebarToggleFloating,
-.detailToggleFloating {
-  position: absolute;
-  top: 1px;
-  z-index: 2;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-}
-
-.sidebarToggleFloating {
-  left: 6px;
-}
-
-.detailToggleFloating {
-  right: 6px;
-}
-
-.sidebarToggleFloating:hover .sidebarIconBadge,
-.detailToggleFloating:hover .sidebarIconBadge {
-  background: rgba(255, 255, 255, 0.18);
-}
-
 .sidebarSectionTitleButton:hover {
   border-color: var(--color-border-strong);
   background: rgba(255, 255, 255, 0.06);
-}
-
-.sidebarIconBadge {
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  /* background: rgba(255, 255, 255, 0.08); */
-  color: var(--color-text-accent);
-  font-size: 11px;
-  font-weight: 700;
-  flex-shrink: 0;
 }
 
 .sidebarPanels {

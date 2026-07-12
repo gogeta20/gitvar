@@ -197,35 +197,25 @@ export function RepositoryWorkspace({
       ) : null}
 
       <div className={styles.historyColumn}>
-        <button
-          aria-label={isSidebarOpen ? "Hide sidebar" : "Show sidebar"}
-          className={styles.sidebarToggleFloating}
-          onClick={() => setIsSidebarOpen((current) => !current)}
-          type="button"
-        >
-          <span className={styles.sidebarIconBadge}>{isSidebarOpen ? "<" : ">"}</span>
-        </button>
-
-        <button
-          aria-label={isDetailOpen ? "Hide commit detail panel" : "Show commit detail panel"}
-          className={styles.detailToggleFloating}
-          onClick={() => setIsDetailOpen((current) => !current)}
-          type="button"
-        >
-          <span className={styles.sidebarIconBadge}>{isDetailOpen ? ">" : "<"}</span>
-        </button>
-
         {selectedFilePath && selectedCommit ? (
           <FileDiffPanel
             commitId={selectedCommit.id}
             filePath={selectedFilePath}
+            isDetailOpen={isDetailOpen}
+            isSidebarOpen={isSidebarOpen}
             onClose={() => setSelectedFilePath(null)}
+            onToggleDetail={() => setIsDetailOpen((current) => !current)}
+            onToggleSidebar={() => setIsSidebarOpen((current) => !current)}
             repositoryPath={selectedRepository.path}
           />
         ) : (
           <CommitGraphPanel
+            isDetailOpen={isDetailOpen}
+            isSidebarOpen={isSidebarOpen}
             onCommitsLoaded={setGraphCommits}
             onSelectCommit={setSelectedCommitId}
+            onToggleDetail={() => setIsDetailOpen((current) => !current)}
+            onToggleSidebar={() => setIsSidebarOpen((current) => !current)}
             repositoryPath={selectedRepository.path}
             selectedBranchName={selectedBranch?.name ?? null}
             selectedBranchTargetCommit={selectedBranch?.targetCommit ?? null}
