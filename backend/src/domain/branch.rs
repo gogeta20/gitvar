@@ -5,4 +5,5 @@ pub struct Branch {
     pub is_remote: bool,
     pub is_current: bool,
     pub target_commit: String,
+    pub created_at: Option<String>,
 }
