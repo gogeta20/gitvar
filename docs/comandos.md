@@ -43,12 +43,14 @@ Para poder abrir OTROS repos del host desde esa pantalla, cada desarrollador deb
 services:
   dev:
     volumes:
-      - /ruta/a/tus/proyectos:/host/projects:ro
+      - /ruta/a/tus/proyectos:/host/projects
     environment:
       - GITMAP_BROWSE_ROOT=/host/projects
 ```
 
 `docker compose up` mezcla automaticamente ese archivo si existe. Sin el override, el navegador de carpetas arranca en `/workspace` (siempre valido, no depende de la maquina de nadie).
+
+Importante: el mount NO debe ser `:ro` (solo lectura). Las acciones de stage/unstage/discard (por archivo y por hunk) escriben directamente sobre el repo abierto (`git add`, `git apply`, etc.); con `:ro` fallan con "Read-only file system".
 
 ## App de escritorio (Tauri) desde el contenedor (opcional, por desarrollador)
 

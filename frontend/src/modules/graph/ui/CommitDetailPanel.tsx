@@ -122,16 +122,24 @@ export function CommitDetailPanel({
     return () => window.clearInterval(intervalId);
   }, [refreshWorkingStatus]);
 
+  function handleActionError(currentError: unknown) {
+    setFilesError(currentError instanceof Error ? currentError.message : "Unexpected error.");
+  }
+
   function handleStageFile(filePath: string) {
     const workingChangesWriter = createWorkingChangesWriter();
 
-    stageFile(workingChangesWriter, repositoryPath, filePath).then(refreshWorkingStatus);
+    stageFile(workingChangesWriter, repositoryPath, filePath)
+      .then(refreshWorkingStatus)
+      .catch(handleActionError);
   }
 
   function handleUnstageFile(filePath: string) {
     const workingChangesWriter = createWorkingChangesWriter();
 
-    unstageFile(workingChangesWriter, repositoryPath, filePath).then(refreshWorkingStatus);
+    unstageFile(workingChangesWriter, repositoryPath, filePath)
+      .then(refreshWorkingStatus)
+      .catch(handleActionError);
   }
 
   function handleDiscardFile(filePath: string) {
@@ -141,7 +149,9 @@ export function CommitDetailPanel({
 
     const workingChangesWriter = createWorkingChangesWriter();
 
-    discardFile(workingChangesWriter, repositoryPath, filePath).then(refreshWorkingStatus);
+    discardFile(workingChangesWriter, repositoryPath, filePath)
+      .then(refreshWorkingStatus)
+      .catch(handleActionError);
   }
 
   useEffect(() => {
