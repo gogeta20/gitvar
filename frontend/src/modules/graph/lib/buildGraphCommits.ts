@@ -37,9 +37,30 @@ export function buildGraphCommits(commits: Commit[]): GraphCommit[] {
       columns[column] = null;
     });
 
+    const reusableParentLanes = [...convergingLanes];
+    const claimedParentLanes = new Set<number>();
+
     const parentLanes = commit.parents.map((parentId, index) => {
-      const column = index === 0 ? lane : claimColumn();
+      if (index === 0) {
+        columns[lane] = parentId;
+        claimedParentLanes.add(lane);
+        return lane;
+      }
+
+      const existingParentLane = columns.findIndex(
+        (value, column) =>
+          value === parentId &&
+          column !== lane &&
+          !claimedParentLanes.has(column)
+      );
+
+      const column =
+        existingParentLane !== -1
+          ? existingParentLane
+          : reusableParentLanes.shift() ?? claimColumn();
+
       columns[column] = parentId;
+      claimedParentLanes.add(column);
       return column;
     });
 

@@ -5,10 +5,10 @@ use gitmap_backend::infrastructure::git::GitCliCommitReader;
 use gitmap_backend::infrastructure::git::GitCliFileDiffReader;
 use gitmap_backend::infrastructure::git::GitCliStashReader;
 use gitmap_backend::infrastructure::git::GitCliStatusReader;
-use gitmap_backend::presentation::cli::run;
 use gitmap_backend::presentation::http::serve;
 
-fn main() {
+fn spawn_backend_server() {
+  std::thread::spawn(|| {
     let branch_reader = GitCliBranchReader::new();
     let commit_reader = GitCliCommitReader::new();
     let status_reader = GitCliStatusReader::new();
@@ -17,22 +17,35 @@ fn main() {
     let stash_reader = GitCliStashReader::new();
     let directory_browser = FsDirectoryBrowser::new();
 
-    let command = std::env::args().nth(1);
-    let result = match command.as_deref() {
-        Some("serve") => serve(
-            &branch_reader,
-            &commit_reader,
-            &status_reader,
-            &commit_files_reader,
-            &file_diff_reader,
-            &stash_reader,
-            &directory_browser,
-        ),
-        _ => run(&branch_reader),
-    };
-
-    if let Err(error) = result {
-        eprintln!("{error}");
-        std::process::exit(1);
+    if let Err(error) = serve(
+      &branch_reader,
+      &commit_reader,
+      &status_reader,
+      &commit_files_reader,
+      &file_diff_reader,
+      &stash_reader,
+      &directory_browser,
+    ) {
+      eprintln!("GitMap backend stopped: {error}");
     }
+  });
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+  spawn_backend_server();
+
+  tauri::Builder::default()
+    .setup(|app| {
+      if cfg!(debug_assertions) {
+        app.handle().plugin(
+          tauri_plugin_log::Builder::default()
+            .level(log::LevelFilter::Info)
+            .build(),
+        )?;
+      }
+      Ok(())
+    })
+    .run(tauri::generate_context!())
+    .expect("error while running tauri application");
 }

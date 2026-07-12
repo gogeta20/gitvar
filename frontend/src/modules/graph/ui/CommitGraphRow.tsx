@@ -2,12 +2,16 @@ import type { CSSProperties } from "react";
 import { Tooltip } from "@core/components/Tooltip";
 import { GraphCommit } from "@modules/graph/domain/commit";
 import { resolveCommitRefs } from "@modules/graph/lib/resolveCommitRefs";
-import { resolveLaneColor } from "@modules/graph/render/graphRenderConfig";
+import {
+  GraphLayoutConfig,
+  resolveLaneColor
+} from "@modules/graph/render/graphRenderConfig";
 import { CommitGraphSvg } from "@modules/graph/render/CommitGraphSvg";
 import styles from "./CommitGraphPanel.module.css";
 
 interface CommitGraphRowProps {
   commit: GraphCommit;
+  graphLayout: GraphLayoutConfig;
   graphWidth: number;
   selectedBranchName: string | null;
   isBranchRefSelected: boolean;
@@ -17,6 +21,7 @@ interface CommitGraphRowProps {
   showDate: boolean;
   showMessage: boolean;
   onSelect: () => void;
+  rowRef?: (element: HTMLButtonElement | null) => void;
 }
 
 function formatDateLabel(input: string): string {
@@ -32,6 +37,7 @@ function formatDateLabel(input: string): string {
 
 export function CommitGraphRow({
   commit,
+  graphLayout,
   graphWidth,
   selectedBranchName,
   isBranchRefSelected,
@@ -40,7 +46,8 @@ export function CommitGraphRow({
   showAuthor,
   showDate,
   showMessage,
-  onSelect
+  onSelect,
+  rowRef
 }: CommitGraphRowProps) {
   const laneColor = resolveLaneColor(commit.lane);
   const { primary, otherRefs, isCurrentBranch } = resolveCommitRefs(
@@ -61,7 +68,18 @@ export function CommitGraphRow({
     <button
       className={rowClassName}
       onClick={onSelect}
-      style={{ "--lane-color": laneColor } as CSSProperties}
+      ref={rowRef}
+      style={
+        {
+          "--lane-color": laneColor,
+          "--graph-width": `${graphWidth}px`,
+          "--refs-column-max-width": `${graphLayout.refColumnMaxWidth}px`,
+          "--ref-label-max-width": `${graphLayout.refLabelMaxWidth}px`,
+          "--author-max-width": `${graphLayout.authorMaxWidth}px`,
+          "--row-column-gap": `${graphLayout.rowColumnGap}px`,
+          "--content-gap": `${graphLayout.contentGap}px`
+        } as CSSProperties
+      }
       type="button"
     >
       <div className={styles.refsCell}>
@@ -89,7 +107,7 @@ export function CommitGraphRow({
       </div>
 
       <div className={styles.graphCell}>
-        <CommitGraphSvg commit={commit} graphWidth={graphWidth} />
+        <CommitGraphSvg commit={commit} graphLayout={graphLayout} graphWidth={graphWidth} />
         {commit.childCount > 1 ? (
           <span className={styles.divergenceBadge} title={`${commit.childCount} branches diverge here`}>
             {commit.childCount}
