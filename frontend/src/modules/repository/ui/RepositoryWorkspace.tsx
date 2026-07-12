@@ -7,29 +7,18 @@ import { GraphCommit } from "@modules/graph/domain/commit";
 import { WORKING_CHANGES_COMMIT_ID } from "@modules/graph/domain/workingStatus";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { InfoCard } from "@core/components/InfoCard";
 import { ResizeHandle } from "@core/components/ResizeHandle";
 import { useResizableWidth } from "@core/hooks/useResizableWidth";
-import { loadRepositoryWorkspace } from "@modules/repository/application/use-cases/loadRepositoryWorkspace";
-import {
-  RepositorySummary,
-  RepositoryWorkspace as RepositoryWorkspaceState
-} from "@modules/repository/domain/repository";
-import { createRepositoryReader } from "@modules/repository/infrastructure/RepositoryReaderProvider";
+import { RepositorySummary } from "@modules/repository/domain/repository";
 import { StashEntry } from "@modules/stash/domain/stashEntry";
 import { StashPanel } from "@modules/stash/ui/StashPanel";
 import styles from "./RepositoryWorkspace.module.css";
 
 interface RepositoryWorkspaceProps {
-  initialRepositoryId?: string;
+  repository: RepositorySummary;
 }
 
-export function RepositoryWorkspace({
-  initialRepositoryId
-}: RepositoryWorkspaceProps) {
-  const [workspace, setWorkspace] = useState<RepositoryWorkspaceState | null>(null);
-  const [selectedRepositoryId, setSelectedRepositoryId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export function RepositoryWorkspace({ repository: selectedRepository }: RepositoryWorkspaceProps) {
   const [graphCommits, setGraphCommits] = useState<GraphCommit[]>([]);
   const [selectedCommitId, setSelectedCommitId] = useState<string | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
@@ -54,41 +43,14 @@ export function RepositoryWorkspace({
   });
 
   useEffect(() => {
-    const repositoryReader = createRepositoryReader();
-
-    loadRepositoryWorkspace(repositoryReader)
-      .then((nextWorkspace) => {
-        setWorkspace(nextWorkspace);
-        setSelectedRepositoryId(
-          initialRepositoryId ?? nextWorkspace.selectedRepositoryId
-        );
-      })
-      .catch((currentError: unknown) => {
-        setError(
-          currentError instanceof Error ? currentError.message : "Unexpected error."
-        );
-      });
-  }, [initialRepositoryId]);
-
-  useEffect(() => {
     setSelectedBranch(null);
     setSelectedCommitId(null);
     setSelectedFilePath(null);
-  }, [selectedRepositoryId]);
+  }, [selectedRepository.id]);
 
   useEffect(() => {
     setSelectedFilePath(null);
   }, [selectedCommitId]);
-
-  const selectedRepository = useMemo<RepositorySummary | null>(() => {
-    if (!workspace || !selectedRepositoryId) {
-      return null;
-    }
-
-    return (
-      workspace.repositories.find((item) => item.id === selectedRepositoryId) ?? null
-    );
-  }, [workspace, selectedRepositoryId]);
 
   const selectedCommit = useMemo(() => {
     if (!selectedCommitId) {
@@ -97,14 +59,6 @@ export function RepositoryWorkspace({
 
     return graphCommits.find((item) => item.id === selectedCommitId) ?? null;
   }, [graphCommits, selectedCommitId]);
-
-  if (error) {
-    return <InfoCard title="Repository workspace">{error}</InfoCard>;
-  }
-
-  if (!workspace || !selectedRepository) {
-    return <InfoCard title="Repository workspace">Loading workspace...</InfoCard>;
-  }
 
   function handleSelectBranch(branch: Branch) {
     setSelectedBranch(branch);

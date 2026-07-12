@@ -1,12 +1,9 @@
-import { useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
-import { loadRepositoryWorkspace } from "@modules/repository/application/use-cases/loadRepositoryWorkspace";
 import { RepositorySummary } from "@modules/repository/domain/repository";
-import { createRepositoryReader } from "@modules/repository/infrastructure/RepositoryReaderProvider";
 import styles from "./WorkspaceTabsBar.module.css";
 
 interface WorkspaceTabsBarProps {
-  openRepositoryIds: string[];
+  openRepositories: RepositorySummary[];
   activeRepositoryId: string | null;
   onSelectTab: (repositoryId: string) => void;
   onCloseTab: (repositoryId: string) => void;
@@ -14,46 +11,32 @@ interface WorkspaceTabsBarProps {
 }
 
 export function WorkspaceTabsBar({
-  openRepositoryIds,
+  openRepositories,
   activeRepositoryId,
   onSelectTab,
   onCloseTab,
   onAddTab
 }: WorkspaceTabsBarProps) {
-  const [repositories, setRepositories] = useState<RepositorySummary[]>([]);
-
-  useEffect(() => {
-    const repositoryReader = createRepositoryReader();
-
-    loadRepositoryWorkspace(repositoryReader)
-      .then((workspace) => setRepositories(workspace.repositories))
-      .catch(() => setRepositories([]));
-  }, []);
-
-  function resolveName(repositoryId: string): string {
-    return repositories.find((repository) => repository.id === repositoryId)?.name ?? repositoryId;
-  }
-
   return (
     <div className={styles.toolbar}>
       <div className={styles.optionsRow} />
 
       <div className={styles.tabsRow}>
-        {openRepositoryIds.map((repositoryId) => (
+        {openRepositories.map((repository) => (
           <button
             className={
-              repositoryId === activeRepositoryId ? styles.tabActive : styles.tab
+              repository.id === activeRepositoryId ? styles.tabActive : styles.tab
             }
-            key={repositoryId}
-            onClick={() => onSelectTab(repositoryId)}
+            key={repository.id}
+            onClick={() => onSelectTab(repository.id)}
             type="button"
           >
-            <span className={styles.tabLabel}>{resolveName(repositoryId)}</span>
+            <span className={styles.tabLabel}>{repository.name}</span>
             <span
               className={styles.tabClose}
               onClick={(event) => {
                 event.stopPropagation();
-                onCloseTab(repositoryId);
+                onCloseTab(repository.id);
               }}
               role="button"
               tabIndex={-1}

@@ -8,6 +8,8 @@ use crate::app::commit_files::contracts::CommitFilesReader;
 use crate::app::commit_files::read_commit_files::read_commit_files;
 use crate::app::commits::contracts::CommitReader;
 use crate::app::commits::read_commits::read_commits;
+use crate::app::directory_browser::contracts::DirectoryBrowser;
+use crate::app::directory_browser::read_directory_listing::read_directory_listing;
 use crate::app::file_diff::contracts::FileDiffReader;
 use crate::app::file_diff::read_file_diff::read_file_diff;
 use crate::app::stash::contracts::StashReader;
@@ -16,6 +18,7 @@ use crate::app::status::contracts::StatusReader;
 use crate::app::status::read_status::read_status;
 use crate::domain::branch::Branch;
 use crate::domain::commit::Commit;
+use crate::domain::directory_entry::{DirectoryEntry, DirectoryListing};
 use crate::domain::errors::AppError;
 use crate::domain::file_change::{FileChange, FileChangeType};
 use crate::domain::stash_entry::StashEntry;
@@ -28,6 +31,7 @@ pub fn serve(
     commit_files_reader: &dyn CommitFilesReader,
     file_diff_reader: &dyn FileDiffReader,
     stash_reader: &dyn StashReader,
+    directory_browser: &dyn DirectoryBrowser,
 ) -> Result<(), AppError> {
     let listener = TcpListener::bind("0.0.0.0:7879")
         .map_err(|error| AppError::IoError(error.to_string()))?;
@@ -55,6 +59,7 @@ pub fn serve(
             commit_files_reader,
             file_diff_reader,
             stash_reader,
+            directory_browser,
         );
 
         stream
@@ -73,6 +78,7 @@ fn route_request(
     commit_files_reader: &dyn CommitFilesReader,
     file_diff_reader: &dyn FileDiffReader,
     stash_reader: &dyn StashReader,
+    directory_browser: &dyn DirectoryBrowser,
 ) -> String {
     let Some(first_line) = request.lines().next() else {
         return json_response(400, r#"{"error":"Invalid request."}"#);
@@ -108,6 +114,10 @@ fn route_request(
 
     if target.starts_with("/api/stash") {
         return handle_stash_request(target, stash_reader);
+    }
+
+    if target.starts_with("/api/browse-directory") {
+        return handle_browse_directory_request(target, directory_browser);
     }
 
     json_response(404, r#"{"error":"Not found."}"#)
@@ -207,6 +217,26 @@ fn handle_stash_request(target: &str, stash_reader: &dyn StashReader) -> String 
             &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
         ),
     }
+}
+
+fn handle_browse_directory_request(target: &str, directory_browser: &dyn DirectoryBrowser) -> String {
+    let path = extract_query_param(target, "path")
+        .map(PathBuf::from)
+        .unwrap_or_else(default_browse_root);
+
+    match read_directory_listing(directory_browser, &path) {
+        Ok(listing) => json_response(200, &directory_listing_to_json(&listing)),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn default_browse_root() -> PathBuf {
+    std::env::var("GITMAP_BROWSE_ROOT")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from("/workspace"))
 }
 
 fn extract_repo_path(target: &str) -> Option<PathBuf> {
@@ -361,6 +391,36 @@ fn stash_entries_to_json(entries: &[StashEntry]) -> String {
         })
         .collect::<Vec<_>>()
         .join(",")
+}
+
+fn directory_listing_to_json(listing: &DirectoryListing) -> String {
+    let entries = listing
+        .entries
+        .iter()
+        .map(directory_entry_to_json)
+        .collect::<Vec<_>>()
+        .join(",");
+
+    let parent_path = match &listing.parent_path {
+        Some(parent) => format!(r#""{}""#, escape_json(parent)),
+        None => "null".to_string(),
+    };
+
+    format!(
+        r#"{{"currentPath":"{}","parentPath":{},"entries":[{}]}}"#,
+        escape_json(&listing.current_path),
+        parent_path,
+        entries
+    )
+}
+
+fn directory_entry_to_json(entry: &DirectoryEntry) -> String {
+    format!(
+        r#"{{"name":"{}","path":"{}","isGitRepo":{}}}"#,
+        escape_json(&entry.name),
+        escape_json(&entry.path),
+        entry.is_git_repo
+    )
 }
 
 fn json_response(status_code: u16, body: &str) -> String {
