@@ -25,10 +25,10 @@ pub fn serve(
     commit_files_reader: &dyn CommitFilesReader,
     file_diff_reader: &dyn FileDiffReader,
 ) -> Result<(), AppError> {
-    let listener = TcpListener::bind("0.0.0.0:7878")
+    let listener = TcpListener::bind("0.0.0.0:7879")
         .map_err(|error| AppError::IoError(error.to_string()))?;
 
-    println!("GitMap backend listening on http://0.0.0.0:7878");
+    println!("GitMap backend listening on http://0.0.0.0:7879");
 
     for stream in listener.incoming() {
         let mut stream = stream.map_err(|error| AppError::IoError(error.to_string()))?;

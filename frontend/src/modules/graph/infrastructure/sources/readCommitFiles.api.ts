@@ -1,7 +1,7 @@
 import { FileChange } from "@modules/graph/domain/fileChange";
 import { parseCommitFilesDto } from "@modules/graph/infrastructure/parsers/parseCommitFilesDto";
 
-const COMMIT_FILES_API_URL = "http://127.0.0.1:7878/api/commit-files";
+const COMMIT_FILES_API_URL = "http://127.0.0.1:7879/api/commit-files";
 
 export async function readCommitFilesFromApi(
   repositoryPath: string,

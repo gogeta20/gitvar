@@ -1,7 +1,7 @@
 import { WorkingStatus } from "@modules/graph/domain/workingStatus";
 import { parseStatusDto } from "@modules/graph/infrastructure/parsers/parseStatusDto";
 
-const STATUS_API_URL = "http://127.0.0.1:7878/api/status";
+const STATUS_API_URL = "http://127.0.0.1:7879/api/status";
 
 export async function readStatusFromApi(
   repositoryPath: string

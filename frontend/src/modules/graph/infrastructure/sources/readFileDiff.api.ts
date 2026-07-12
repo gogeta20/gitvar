@@ -1,4 +1,4 @@
-const FILE_DIFF_API_URL = "http://127.0.0.1:7878/api/file-diff";
+const FILE_DIFF_API_URL = "http://127.0.0.1:7879/api/file-diff";
 
 export async function readFileDiffFromApi(
   repositoryPath: string,

@@ -1,7 +1,7 @@
 import { Branch } from "@modules/branches/domain/branch";
 import { parseBranchesDto } from "@modules/branches/infrastructure/parsers/parseBranchesDto";
 
-const BRANCHES_API_URL = "http://127.0.0.1:7878/api/branches";
+const BRANCHES_API_URL = "http://127.0.0.1:7879/api/branches";
 
 export async function readBranchesFromApi(
   repositoryPath: string
