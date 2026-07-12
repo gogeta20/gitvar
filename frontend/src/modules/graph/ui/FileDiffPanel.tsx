@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,
   Check,
+  ChevronDown,
+  ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
@@ -47,6 +49,7 @@ export function FileDiffPanel({
   const [diffText, setDiffText] = useState("");
   const [stagedDiffText, setStagedDiffText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [expandedStagedHunks, setExpandedStagedHunks] = useState<Set<string>>(new Set());
 
   const isWorkingChanges = commitId === WORKING_CHANGES_COMMIT_ID;
 
@@ -115,10 +118,34 @@ export function FileDiffPanel({
       .catch(handleActionError);
   }
 
+  function toggleStagedHunk(key: string) {
+    setExpandedStagedHunks((current) => {
+      const next = new Set(current);
+
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+
+      return next;
+    });
+  }
+
   const hunks = parseDiffHunks(diffText);
   const stagedHunks = isWorkingChanges ? parseDiffHunks(stagedDiffText) : [];
 
-  function renderHunk(hunk: DiffHunk, hunkIndex: number, staged: boolean) {
+  function renderHunkLines(hunk: DiffHunk) {
+    return hunk.lines.map((line, lineIndex) => (
+      <div className={`${styles.hunkLine} ${styles[`hunkLine-${line.type}`]}`} key={lineIndex}>
+        <span className={styles.lineNumber}>{line.oldLineNumber ?? ""}</span>
+        <span className={styles.lineNumber}>{line.newLineNumber ?? ""}</span>
+        <span className={styles.lineContent}>{line.content || " "}</span>
+      </div>
+    ));
+  }
+
+  function renderUnstagedHunk(hunk: DiffHunk, hunkIndex: number) {
     return (
       <div className={styles.hunk} key={hunkIndex}>
         <div className={styles.hunkHeader}>
@@ -126,51 +153,66 @@ export function FileDiffPanel({
 
           {isWorkingChanges ? (
             <div className={styles.hunkActions}>
-              {staged ? (
-                <button
-                  aria-label="Unstage hunk"
-                  className={`${styles.hunkActionButton} ${styles.hunkActionButtonUnstage}`}
-                  onClick={() => handleUnstageHunk(hunk)}
-                  title="Unstage this hunk"
-                  type="button"
-                >
-                  <Undo2 size={12} />
-                </button>
-              ) : (
-                <>
-                  <button
-                    aria-label="Stage hunk"
-                    className={`${styles.hunkActionButton} ${styles.hunkActionButtonStage}`}
-                    onClick={() => handleStageHunk(hunk)}
-                    title="Stage this hunk"
-                    type="button"
-                  >
-                    <Check size={12} />
-                  </button>
-                  <button
-                    aria-label="Discard hunk"
-                    className={`${styles.hunkActionButton} ${styles.hunkActionButtonDiscard}`}
-                    onClick={() => handleDiscardHunk(hunk)}
-                    title="Discard this hunk"
-                    type="button"
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </>
-              )}
+              <button
+                aria-label="Stage hunk"
+                className={`${styles.hunkActionButton} ${styles.hunkActionButtonStage}`}
+                onClick={() => handleStageHunk(hunk)}
+                title="Stage this hunk"
+                type="button"
+              >
+                <Check size={13} />
+                Stage
+              </button>
+              <button
+                aria-label="Discard hunk"
+                className={`${styles.hunkActionButton} ${styles.hunkActionButtonDiscard}`}
+                onClick={() => handleDiscardHunk(hunk)}
+                title="Discard this hunk"
+                type="button"
+              >
+                <Trash2 size={12} />
+              </button>
             </div>
           ) : null}
         </div>
-        {hunk.lines.map((line, lineIndex) => (
-          <div
-            className={`${styles.hunkLine} ${styles[`hunkLine-${line.type}`]}`}
-            key={lineIndex}
+        {renderHunkLines(hunk)}
+      </div>
+    );
+  }
+
+  function renderStagedHunk(hunk: DiffHunk, hunkIndex: number) {
+    const key = `${hunkIndex}:${hunk.header}`;
+    const isExpanded = expandedStagedHunks.has(key);
+
+    return (
+      <div
+        className={`${styles.hunk} ${isExpanded ? styles.hunkStagedExpanded : styles.hunkStagedCollapsed}`}
+        key={key}
+      >
+        <div className={styles.hunkHeader}>
+          <button
+            className={styles.hunkCollapseToggle}
+            onClick={() => toggleStagedHunk(key)}
+            type="button"
           >
-            <span className={styles.lineNumber}>{line.oldLineNumber ?? ""}</span>
-            <span className={styles.lineNumber}>{line.newLineNumber ?? ""}</span>
-            <span className={styles.lineContent}>{line.content || " "}</span>
+            {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            <span className={styles.hunkHeaderLabel}>{hunk.header}</span>
+          </button>
+
+          <div className={styles.hunkActions}>
+            <span className={styles.hunkStagedTag}>in Staged</span>
+            <button
+              aria-label="Return to changes"
+              className={`${styles.hunkActionButton} ${styles.hunkActionButtonUnstage}`}
+              onClick={() => handleUnstageHunk(hunk)}
+              title="Return to Changes"
+              type="button"
+            >
+              <Undo2 size={12} />
+            </button>
           </div>
-        ))}
+        </div>
+        {isExpanded ? renderHunkLines(hunk) : null}
       </div>
     );
   }
@@ -210,27 +252,27 @@ export function FileDiffPanel({
 
       {!error && isWorkingChanges ? (
         <>
-          <div className={styles.hunkSectionHeader}>Staged ({stagedHunks.length})</div>
-          {stagedHunks.length === 0 ? (
-            <p className={styles.empty}>Nothing staged yet.</p>
-          ) : (
-            <div className={styles.hunkList}>
-              {stagedHunks.map((hunk, hunkIndex) => renderHunk(hunk, hunkIndex, true))}
-            </div>
-          )}
-
           <div className={styles.hunkSectionHeader}>Changes ({hunks.length})</div>
           {hunks.length === 0 ? (
             <p className={styles.empty}>No unstaged changes.</p>
           ) : (
             <div className={styles.hunkList}>
-              {hunks.map((hunk, hunkIndex) => renderHunk(hunk, hunkIndex, false))}
+              {hunks.map((hunk, hunkIndex) => renderUnstagedHunk(hunk, hunkIndex))}
+            </div>
+          )}
+
+          <div className={styles.hunkSectionHeader}>Staged ({stagedHunks.length})</div>
+          {stagedHunks.length === 0 ? (
+            <p className={styles.empty}>Nothing staged yet.</p>
+          ) : (
+            <div className={styles.hunkList}>
+              {stagedHunks.map((hunk, hunkIndex) => renderStagedHunk(hunk, hunkIndex))}
             </div>
           )}
         </>
       ) : (
         <div className={styles.hunkList}>
-          {hunks.map((hunk, hunkIndex) => renderHunk(hunk, hunkIndex, false))}
+          {hunks.map((hunk, hunkIndex) => renderUnstagedHunk(hunk, hunkIndex))}
         </div>
       )}
     </InfoCard>
