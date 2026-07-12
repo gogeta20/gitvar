@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { Cloud, ListFilter } from "lucide-react";
 import { InfoCard } from "@core/components/InfoCard";
+import { usePersistedState } from "@core/hooks/usePersistedState";
 import { readBranches } from "@modules/branches/application/use-cases/readBranches";
 import { Branch } from "@modules/branches/domain/branch";
 import { createBranchReader } from "@modules/branches/infrastructure/BranchReaderProvider";
@@ -12,6 +14,8 @@ interface BranchesPanelProps {
   embedded?: boolean;
 }
 
+type BranchOrderMode = "alphabetical" | "created";
+
 export function BranchesPanel({
   repositoryPath,
   selectedBranchName,
@@ -20,6 +24,10 @@ export function BranchesPanel({
 }: BranchesPanelProps) {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [orderMode, setOrderMode] = usePersistedState<BranchOrderMode>(
+    "gitmap.branches.orderMode",
+    "alphabetical"
+  );
 
   useEffect(() => {
     const branchReader = createBranchReader();
@@ -50,12 +58,52 @@ export function BranchesPanel({
         return left.isRemote ? 1 : -1;
       }
 
+      if (orderMode === "created" && !left.isRemote && !right.isRemote) {
+        const leftTimestamp = left.createdAt ? Date.parse(left.createdAt) : 0;
+        const rightTimestamp = right.createdAt ? Date.parse(right.createdAt) : 0;
+
+        if (leftTimestamp !== rightTimestamp) {
+          return rightTimestamp - leftTimestamp;
+        }
+      }
+
       return left.name.localeCompare(right.name);
     });
-  }, [branches]);
+  }, [branches, orderMode]);
 
   const content = (
     <>
+      <div className={styles.branchToolbar}>
+        <span className={styles.branchToolbarLabel}>
+          <ListFilter size={12} />
+          Order
+        </span>
+        <div className={styles.branchToolbarActions}>
+          <button
+            className={
+              orderMode === "alphabetical"
+                ? styles.branchOrderButtonActive
+                : styles.branchOrderButton
+            }
+            onClick={() => setOrderMode("alphabetical")}
+            type="button"
+          >
+            A-Z
+          </button>
+          <button
+            className={
+              orderMode === "created"
+                ? styles.branchOrderButtonActive
+                : styles.branchOrderButton
+            }
+            onClick={() => setOrderMode("created")}
+            type="button"
+          >
+            Created
+          </button>
+        </div>
+      </div>
+
       {error ? <p className={styles.error}>{error}</p> : null}
 
       {!error ? (
@@ -87,7 +135,12 @@ export function BranchesPanel({
                 onClick={() => onSelectBranch(branch)}
                 type="button"
               >
-                <span className={nameClassName}>{branch.name}</span>
+                <span className={styles.branchRowContent}>
+                  {branch.isRemote ? (
+                    <Cloud className={styles.branchRemoteIcon} size={12} />
+                  ) : null}
+                  <span className={nameClassName}>{branch.name}</span>
+                </span>
               </button>
             );
           })}
