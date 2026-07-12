@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { IconButton } from "@core/components/IconButton";
 import { InfoCard } from "@core/components/InfoCard";
 import { usePersistedState } from "@core/hooks/usePersistedState";
+import { CurrentBranchBadge } from "@modules/branches/ui/CurrentBranchBadge";
 import { readCommits } from "@modules/graph/application/use-cases/readCommits";
 import { readStatus } from "@modules/graph/application/use-cases/readStatus";
 import { Commit, GraphCommit } from "@modules/graph/domain/commit";
@@ -22,6 +25,10 @@ interface CommitGraphPanelProps {
   selectedBranchName: string | null;
   selectedBranchTargetCommit: string | null;
   selectedCommitId: string | null;
+  isSidebarOpen: boolean;
+  isDetailOpen: boolean;
+  onToggleSidebar: () => void;
+  onToggleDetail: () => void;
   onSelectCommit: (commitId: string) => void;
   onCommitsLoaded?: (commits: GraphCommit[]) => void;
 }
@@ -31,6 +38,10 @@ export function CommitGraphPanel({
   selectedBranchName,
   selectedBranchTargetCommit,
   selectedCommitId,
+  isSidebarOpen,
+  isDetailOpen,
+  onToggleSidebar,
+  onToggleDetail,
   onSelectCommit,
   onCommitsLoaded
 }: CommitGraphPanelProps) {
@@ -124,15 +135,32 @@ export function CommitGraphPanel({
   return (
     <InfoCard
       fillHeight
+      title={
+        <div className={styles.headerCluster}>
+          <IconButton
+            icon={isSidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+            label={isSidebarOpen ? "Hide sidebar" : "Show sidebar"}
+            onClick={onToggleSidebar}
+          />
+          <CurrentBranchBadge repositoryPath={repositoryPath} />
+        </div>
+      }
       headerActions={
-        <HistoryMapOptionsMenu
-          onToggleAuthor={() => setShowAuthor((current) => !current)}
-          onToggleDate={() => setShowDate((current) => !current)}
-          onToggleMessage={() => setShowMessage((current) => !current)}
-          showAuthor={showAuthor}
-          showDate={showDate}
-          showMessage={showMessage}
-        />
+        <div className={styles.headerCluster}>
+          <HistoryMapOptionsMenu
+            onToggleAuthor={() => setShowAuthor((current) => !current)}
+            onToggleDate={() => setShowDate((current) => !current)}
+            onToggleMessage={() => setShowMessage((current) => !current)}
+            showAuthor={showAuthor}
+            showDate={showDate}
+            showMessage={showMessage}
+          />
+          <IconButton
+            icon={isDetailOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
+            label={isDetailOpen ? "Hide commit detail panel" : "Show commit detail panel"}
+            onClick={onToggleDetail}
+          />
+        </div>
       }
     >
       {error ? <p className={styles.error}>{error}</p> : null}
