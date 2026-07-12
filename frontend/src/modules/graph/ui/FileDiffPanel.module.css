@@ -50,11 +50,60 @@
 }
 
 .hunkHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
   padding: 4px var(--space-3);
   color: var(--color-text-accent);
   background: color-mix(in srgb, var(--color-text-accent) 12%, var(--color-bg-elevated));
   border-bottom: 1px solid var(--color-border-default);
   font-size: 11px;
+}
+
+.hunkHeaderLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hunkActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.hunkActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.hunkActionButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.hunkActionButtonStage:hover {
+  color: #2ecc71;
+  background: rgba(46, 204, 113, 0.15);
+}
+
+.hunkActionButtonDiscard:hover {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.15);
+}
+
+.hunkActionButtonUnstage:hover {
+  color: #f5b942;
+  background: rgba(245, 185, 66, 0.15);
 }
 
 .hunkLine {

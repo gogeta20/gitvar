@@ -8,5 +8,6 @@ pub trait FileDiffReader {
         repository_path: &Path,
         commit_id: &str,
         file_path: &str,
+        staged: bool,
     ) -> Result<String, AppError>;
 }

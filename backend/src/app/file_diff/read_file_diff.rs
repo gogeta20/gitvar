@@ -8,6 +8,7 @@ pub fn read_file_diff(
     repository_path: &Path,
     commit_id: &str,
     file_path: &str,
+    staged: bool,
 ) -> Result<String, AppError> {
-    file_diff_reader.read_file_diff(repository_path, commit_id, file_path)
+    file_diff_reader.read_file_diff(repository_path, commit_id, file_path, staged)
 }

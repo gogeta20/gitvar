@@ -20,8 +20,11 @@ use crate::app::status::contracts::StatusReader;
 use crate::app::status::read_status::read_status;
 use crate::app::working_changes::contracts::WorkingChangesWriter;
 use crate::app::working_changes::discard_file::discard_file;
+use crate::app::working_changes::discard_hunk::discard_hunk;
 use crate::app::working_changes::stage_file::stage_file;
+use crate::app::working_changes::stage_hunk::stage_hunk;
 use crate::app::working_changes::unstage_file::unstage_file;
+use crate::app::working_changes::unstage_hunk::unstage_hunk;
 use crate::domain::branch::Branch;
 use crate::domain::commit::Commit;
 use crate::domain::directory_entry::{DirectoryEntry, DirectoryListing};
@@ -48,7 +51,7 @@ pub fn serve(
 
     for stream in listener.incoming() {
         let mut stream = stream.map_err(|error| AppError::IoError(error.to_string()))?;
-        let mut buffer = [0_u8; 4096];
+        let mut buffer = [0_u8; 262_144];
 
         let bytes_read = stream
             .read(&mut buffer)
@@ -119,6 +122,27 @@ fn route_request(
             return json_response(405, r#"{"error":"Method not allowed."}"#);
         }
         return handle_discard_file_request(target, working_changes_writer);
+    }
+
+    if target.starts_with("/api/stage-hunk") {
+        if method != "POST" {
+            return json_response(405, r#"{"error":"Method not allowed."}"#);
+        }
+        return handle_stage_hunk_request(target, working_changes_writer);
+    }
+
+    if target.starts_with("/api/discard-hunk") {
+        if method != "POST" {
+            return json_response(405, r#"{"error":"Method not allowed."}"#);
+        }
+        return handle_discard_hunk_request(target, working_changes_writer);
+    }
+
+    if target.starts_with("/api/unstage-hunk") {
+        if method != "POST" {
+            return json_response(405, r#"{"error":"Method not allowed."}"#);
+        }
+        return handle_unstage_hunk_request(target, working_changes_writer);
     }
 
     if method != "GET" {
@@ -233,7 +257,9 @@ fn handle_file_diff_request(target: &str, file_diff_reader: &dyn FileDiffReader)
         return json_response(400, r#"{"error":"Missing path query parameter."}"#);
     };
 
-    match read_file_diff(file_diff_reader, &path, &commit_id, &file_path) {
+    let staged = extract_query_param(target, "staged").as_deref() == Some("true");
+
+    match read_file_diff(file_diff_reader, &path, &commit_id, &file_path, staged) {
         Ok(diff) => json_response(200, &format!(r#"{{"diff":"{}"}}"#, escape_json(&diff))),
         Err(error) => json_response(
             500,
@@ -333,6 +359,72 @@ fn handle_discard_file_request(target: &str, working_changes_writer: &dyn Workin
     };
 
     match discard_file(working_changes_writer, &path, &file_path) {
+        Ok(()) => json_response(200, r#"{"ok":true}"#),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_stage_hunk_request(target: &str, working_changes_writer: &dyn WorkingChangesWriter) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    let Some(file_path) = extract_query_param(target, "path") else {
+        return json_response(400, r#"{"error":"Missing path query parameter."}"#);
+    };
+
+    let Some(hunk) = extract_query_param(target, "hunk") else {
+        return json_response(400, r#"{"error":"Missing hunk query parameter."}"#);
+    };
+
+    match stage_hunk(working_changes_writer, &path, &file_path, &hunk) {
+        Ok(()) => json_response(200, r#"{"ok":true}"#),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_discard_hunk_request(target: &str, working_changes_writer: &dyn WorkingChangesWriter) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    let Some(file_path) = extract_query_param(target, "path") else {
+        return json_response(400, r#"{"error":"Missing path query parameter."}"#);
+    };
+
+    let Some(hunk) = extract_query_param(target, "hunk") else {
+        return json_response(400, r#"{"error":"Missing hunk query parameter."}"#);
+    };
+
+    match discard_hunk(working_changes_writer, &path, &file_path, &hunk) {
+        Ok(()) => json_response(200, r#"{"ok":true}"#),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_unstage_hunk_request(target: &str, working_changes_writer: &dyn WorkingChangesWriter) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    let Some(file_path) = extract_query_param(target, "path") else {
+        return json_response(400, r#"{"error":"Missing path query parameter."}"#);
+    };
+
+    let Some(hunk) = extract_query_param(target, "hunk") else {
+        return json_response(400, r#"{"error":"Missing hunk query parameter."}"#);
+    };
+
+    match unstage_hunk(working_changes_writer, &path, &file_path, &hunk) {
         Ok(()) => json_response(200, r#"{"ok":true}"#),
         Err(error) => json_response(
             500,
@@ -586,8 +678,21 @@ fn percent_decode(input: &str) -> String {
 }
 
 fn escape_json(input: &str) -> String {
-    input
-        .replace('\\', "\\\\")
-        .replace('"', "\\\"")
-        .replace('\n', "\\n")
+    let mut result = String::with_capacity(input.len());
+
+    for character in input.chars() {
+        match character {
+            '\\' => result.push_str("\\\\"),
+            '"' => result.push_str("\\\""),
+            '\n' => result.push_str("\\n"),
+            '\r' => result.push_str("\\r"),
+            '\t' => result.push_str("\\t"),
+            other if (other as u32) < 0x20 => {
+                result.push_str(&format!("\\u{:04x}", other as u32));
+            }
+            other => result.push(other),
+        }
+    }
+
+    result
 }

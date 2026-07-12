@@ -4,7 +4,8 @@ export async function readFileDiff(
   fileDiffReader: FileDiffReader,
   repositoryPath: string,
   commitId: string,
-  filePath: string
+  filePath: string,
+  staged?: boolean
 ): Promise<string> {
-  return fileDiffReader.readFileDiff(repositoryPath, commitId, filePath);
+  return fileDiffReader.readFileDiff(repositoryPath, commitId, filePath, staged);
 }
