@@ -3,5 +3,13 @@ name = "gitmap_backend"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "gitmap_backend"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gitmap_backend"
+path = "src/main.rs"
+
 [dependencies]
 rusqlite = { version = "0.32.1", features = ["bundled"] }

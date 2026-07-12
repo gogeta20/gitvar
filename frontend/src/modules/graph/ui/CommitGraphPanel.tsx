@@ -59,6 +59,7 @@ export function CommitGraphPanel({
   const topScrollbarRef = useRef<HTMLDivElement | null>(null);
   const contentViewportRef = useRef<HTMLDivElement | null>(null);
   const isSyncingScrollRef = useRef(false);
+  const selectedRowRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     const commitReader = createCommitReader();
@@ -168,6 +169,10 @@ export function CommitGraphPanel({
     }
   }, [graphCommits, onSelectCommit, selectedCommitId]);
 
+  useEffect(() => {
+    selectedRowRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [selectedCommitId, graphCommits]);
+
   function syncHorizontalScroll(
     source: HTMLDivElement | null,
     target: HTMLDivElement | null
@@ -269,6 +274,9 @@ export function CommitGraphPanel({
                 isBranchTarget={commit.id === selectedBranchTargetCommit}
                 isSelected={commit.id === selectedCommitId}
                 onSelect={() => onSelectCommit(commit.id)}
+                rowRef={commit.id === selectedCommitId ? (element) => {
+                  selectedRowRef.current = element;
+                } : undefined}
               />
             ))}
           </div>

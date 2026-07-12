@@ -1,7 +1,8 @@
+import { API_BASE_URL } from "@core/config/api";
 import { StashEntry } from "@modules/stash/domain/stashEntry";
 import { parseStashDto } from "@modules/stash/infrastructure/parsers/parseStashDto";
 
-const STASH_API_URL = "http://127.0.0.1:7879/api/stash";
+const STASH_API_URL = `${API_BASE_URL}/api/stash`;
 
 export async function readStashFromApi(repositoryPath: string): Promise<StashEntry[]> {
   const response = await fetch(
