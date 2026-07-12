@@ -1,6 +1,36 @@
+.topScrollbar {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin-bottom: 8px;
+  scrollbar-gutter: stable;
+}
+
+.topScrollbarInner {
+  min-width: max(100%, var(--history-min-width, 0px));
+  width: max-content;
+  height: 1px;
+}
+
+.commitListViewport {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.commitListViewport::-webkit-scrollbar {
+  display: none;
+}
+
 .commitList {
   display: grid;
   gap: 0;
+  min-width: max(100%, var(--history-min-width, 0px));
+  width: max-content;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-default);
   border-radius: 12px;
@@ -11,9 +41,12 @@
 .commitRowActive,
 .commitRowBranchTarget {
   display: grid;
-  grid-template-columns: minmax(180px, 320px) var(--graph-width, 76px) minmax(0, 1fr);
+  grid-template-columns:
+    minmax(180px, var(--refs-column-max-width, 320px))
+    var(--graph-width, 76px)
+    minmax(0, 1fr);
   align-items: center;
-  column-gap: 12px;
+  column-gap: var(--row-column-gap, 12px);
   width: 100%;
   border: 0;
   border-radius: 8px;
@@ -114,7 +147,7 @@
 .mainRow {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--content-gap, 12px);
   min-width: 0;
   width: 100%;
 }
@@ -172,7 +205,7 @@
 }
 
 .authorCell {
-  max-width: 140px;
+  max-width: var(--author-max-width, 140px);
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--color-text-accent);
@@ -189,7 +222,7 @@
 .refTextSelected,
 .refTextStash {
   display: inline-block;
-  max-width: 320px;
+  max-width: var(--ref-label-max-width, 320px);
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 11px;

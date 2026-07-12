@@ -1,10 +1,7 @@
 import { GitMerge, Package } from "lucide-react";
 import { GraphCommit } from "@modules/graph/domain/commit";
 import {
-  GRAPH_DOT_RADIUS,
-  GRAPH_LANE_WIDTH,
-  GRAPH_ROW_HEIGHT,
-  GRAPH_SVG_PADDING_X,
+  GraphLayoutConfig,
   resolveLaneColor
 } from "@modules/graph/render/graphRenderConfig";
 import {
@@ -15,28 +12,30 @@ import styles from "@modules/graph/ui/CommitGraphPanel.module.css";
 
 interface CommitGraphSvgProps {
   commit: GraphCommit;
+  graphLayout: GraphLayoutConfig;
   graphWidth: number;
 }
 
 export function CommitGraphSvg({
   commit,
+  graphLayout,
   graphWidth
 }: CommitGraphSvgProps) {
-  const dotX = GRAPH_SVG_PADDING_X + commit.lane * GRAPH_LANE_WIDTH;
-  const dotY = GRAPH_ROW_HEIGHT * 0.5;
+  const dotX = graphLayout.paddingX + commit.lane * graphLayout.laneWidth;
+  const dotY = graphLayout.rowHeight * 0.5;
   const isMergeCommit =
     !commit.isWorkingChanges && !commit.isStash && commit.parents.length > 1;
-  const iconSize = GRAPH_DOT_RADIUS * 3;
+  const iconSize = graphLayout.dotRadius * 3;
   const iconOffset = iconSize / 2;
 
   return (
     <svg
       className={styles.graphSvg}
-      viewBox={`0 0 ${graphWidth} ${GRAPH_ROW_HEIGHT}`}
+      viewBox={`0 0 ${graphWidth} ${graphLayout.rowHeight}`}
       preserveAspectRatio="none"
     >
       {commit.passthroughLanes.map((lane) => {
-        const x = GRAPH_SVG_PADDING_X + lane * GRAPH_LANE_WIDTH;
+        const x = graphLayout.paddingX + lane * graphLayout.laneWidth;
 
         return (
           <line
@@ -46,7 +45,7 @@ export function CommitGraphSvg({
             x1={x}
             x2={x}
             y1="0"
-            y2={GRAPH_ROW_HEIGHT}
+            y2={graphLayout.rowHeight}
           />
         );
       })}
@@ -67,7 +66,7 @@ export function CommitGraphSvg({
           key={`converge-${commit.id}-${lane}`}
           className={styles.graphPath}
           style={{ stroke: resolveLaneColor(lane) }}
-          d={buildIncomingConnectorPath(lane, commit.lane, graphWidth)}
+          d={buildIncomingConnectorPath(lane, commit.lane, graphWidth, graphLayout)}
         />
       ))}
 
@@ -81,7 +80,7 @@ export function CommitGraphSvg({
           x1={dotX}
           x2={dotX}
           y1={dotY}
-          y2={GRAPH_ROW_HEIGHT}
+          y2={graphLayout.rowHeight}
         />
       ) : null}
 
@@ -89,15 +88,20 @@ export function CommitGraphSvg({
         .filter((lane) => lane !== commit.lane)
         .map((lane, index) => (
           <path
-            key={`split-${commit.id}-${lane}-${index}`}
-            className={styles.graphPath}
-            style={{ stroke: resolveLaneColor(lane) }}
-            d={buildConnectorPath(commit.lane, lane, graphWidth)}
-          />
-        ))}
+          key={`split-${commit.id}-${lane}-${index}`}
+          className={styles.graphPath}
+          style={{ stroke: resolveLaneColor(lane) }}
+          d={buildConnectorPath(commit.lane, lane, graphWidth, graphLayout)}
+        />
+      ))}
 
       {commit.isStash || isMergeCommit ? (
-        <circle cx={dotX} cy={dotY} r={GRAPH_DOT_RADIUS * 1.8} fill="var(--color-bg-elevated)" />
+        <circle
+          cx={dotX}
+          cy={dotY}
+          r={graphLayout.dotRadius * 1.8}
+          fill="var(--color-bg-elevated)"
+        />
       ) : null}
 
       {commit.isStash ? (
@@ -123,7 +127,7 @@ export function CommitGraphSvg({
           className={styles.graphDot}
           cx={dotX}
           cy={dotY}
-          r={GRAPH_DOT_RADIUS}
+          r={graphLayout.dotRadius}
           style={
             commit.isWorkingChanges
               ? { fill: "transparent", stroke: resolveLaneColor(commit.lane) }
