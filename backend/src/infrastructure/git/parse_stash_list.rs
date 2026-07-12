@@ -21,12 +21,20 @@ fn parse_stash_line(line: &str) -> Result<StashEntry, AppError> {
     let short_commit_id = parts
         .next()
         .ok_or_else(|| AppError::ParseError(format!("Missing short commit id in line: {line}")))?;
+    let parent_hashes = parts
+        .next()
+        .ok_or_else(|| AppError::ParseError(format!("Missing parent hashes in line: {line}")))?;
     let relative_date = parts
         .next()
         .ok_or_else(|| AppError::ParseError(format!("Missing relative date in line: {line}")))?;
     let message = parts
         .next()
         .ok_or_else(|| AppError::ParseError(format!("Missing message in line: {line}")))?;
+
+    let base_commit_id = parent_hashes
+        .split_whitespace()
+        .next()
+        .ok_or_else(|| AppError::ParseError(format!("Missing base commit in line: {line}")))?;
 
     let index = reference
         .trim_start_matches("stash@{")
@@ -39,6 +47,7 @@ fn parse_stash_line(line: &str) -> Result<StashEntry, AppError> {
         index,
         commit_id: commit_id.to_string(),
         short_commit_id: short_commit_id.to_string(),
+        base_commit_id: base_commit_id.to_string(),
         relative_date: relative_date.to_string(),
         message: message.to_string(),
     })
@@ -51,15 +60,17 @@ mod tests {
     #[test]
     fn parses_stash_entries() {
         let raw = "\
-stash@{0}|abc123|abc123a|2 hours ago|WIP on main: abc123a message\n\
-stash@{1}|def456|def456b|3 days ago|On feature/x: custom message\n";
+stash@{0}|abc123|abc123a|parent111 parent222|2 hours ago|WIP on main: abc123a message\n\
+stash@{1}|def456|def456b|parent333|3 days ago|On feature/x: custom message\n";
 
         let entries = parse_stash_list(raw).expect("stash entries should parse");
 
         assert_eq!(entries.len(), 2);
         assert_eq!(entries[0].reference, "stash@{0}");
         assert_eq!(entries[0].index, 0);
+        assert_eq!(entries[0].base_commit_id, "parent111");
         assert_eq!(entries[1].index, 1);
+        assert_eq!(entries[1].base_commit_id, "parent333");
         assert_eq!(entries[1].message, "On feature/x: custom message");
     }
 }

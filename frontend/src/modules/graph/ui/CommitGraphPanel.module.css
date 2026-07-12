@@ -141,6 +141,12 @@
   font-weight: 400;
 }
 
+.stashMessage {
+  color: var(--color-text-accent);
+  font-style: italic;
+  font-weight: 500;
+}
+
 .dateCell,
 .empty,
 .error {
@@ -169,7 +175,8 @@
 
 .refText,
 .refTextCurrent,
-.refTextSelected {
+.refTextSelected,
+.refTextStash {
   display: inline-block;
   max-width: 320px;
   overflow: hidden;
@@ -183,6 +190,11 @@
 
 .refText {
   color: var(--lane-color);
+}
+
+.refTextStash {
+  color: var(--color-text-accent);
+  font-style: italic;
 }
 
 .refTextCurrent {

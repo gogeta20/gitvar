@@ -3,6 +3,7 @@ export interface StashEntry {
   index: number;
   commitId: string;
   shortCommitId: string;
+  baseCommitId: string;
   relativeDate: string;
   message: string;
 }

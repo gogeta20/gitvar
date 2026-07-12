@@ -5,6 +5,7 @@ interface StashEntryDto {
   index: number;
   commitId: string;
   shortCommitId: string;
+  baseCommitId: string;
   relativeDate: string;
   message: string;
 }
@@ -19,6 +20,7 @@ export function parseStashDto(input: StashResponseDto): StashEntry[] {
     index: entry.index,
     commitId: entry.commitId,
     shortCommitId: entry.shortCommitId,
+    baseCommitId: entry.baseCommitId,
     relativeDate: entry.relativeDate,
     message: entry.message
   }));
