@@ -50,6 +50,33 @@ services:
 
 `docker compose up` mezcla automaticamente ese archivo si existe. Sin el override, el navegador de carpetas arranca en `/workspace` (siempre valido, no depende de la maquina de nadie).
 
+## App de escritorio (Tauri) desde el contenedor (opcional, por desarrollador)
+
+`frontend/src-tauri` ya trae el backend embebido (arranca el mismo servidor HTTP en un thread interno, sin necesidad de correrlo aparte). Para ver la ventana nativa hace falta reenviar X11 y, si se quiere aceleracion por hardware, la GPU del host. Agregar esto al `docker-compose.override.yml` de cada desarrollador:
+
+```yaml
+services:
+  dev:
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "44"   # grupo "video" del host (ver `getent group video`)
+      - "110"  # grupo "render" del host (ver `getent group render`)
+    environment:
+      - DISPLAY=${DISPLAY}
+```
+
+Los numeros de grupo varian por maquina; confirmar con `getent group video render` en el host. Sin el mount de `/dev/dri`, WebKitGTK cae a renderizado por software (mas lento, con glitches visuales) por errores tipo `MESA: Failed to query drm device` / `libGL error: failed to load driver: iris` — no es un bug de la app, es falta de passthrough de GPU.
+
+Luego, en el host, permitir que el contenedor use el display (`xhost +local:`), tener vite corriendo (puerto segun el clone, ver seccion de Frontend), y lanzar la app:
+
+```bash
+xhost +local:
+docker exec -it <container> bash -c "cd /workspace/frontend && cargo tauri dev"
+```
+
 ## Flujo tipico para retomar el proyecto
 
 1. `make up`
