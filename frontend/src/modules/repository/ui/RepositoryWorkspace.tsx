@@ -5,6 +5,7 @@ import { CommitGraphPanel } from "@modules/graph/ui/CommitGraphPanel";
 import { FileDiffPanel } from "@modules/graph/ui/FileDiffPanel";
 import { GraphCommit } from "@modules/graph/domain/commit";
 import { WORKING_CHANGES_COMMIT_ID } from "@modules/graph/domain/workingStatus";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { InfoCard } from "@core/components/InfoCard";
 import { ResizeHandle } from "@core/components/ResizeHandle";
@@ -15,6 +16,8 @@ import {
   RepositoryWorkspace as RepositoryWorkspaceState
 } from "@modules/repository/domain/repository";
 import { createRepositoryReader } from "@modules/repository/infrastructure/RepositoryReaderProvider";
+import { StashEntry } from "@modules/stash/domain/stashEntry";
+import { StashPanel } from "@modules/stash/ui/StashPanel";
 import styles from "./RepositoryWorkspace.module.css";
 
 interface RepositoryWorkspaceProps {
@@ -108,6 +111,12 @@ export function RepositoryWorkspace({
     setSelectedCommitId(branch.targetCommit);
   }
 
+  function handleSelectStash(entry: StashEntry) {
+    setSelectedBranch(null);
+    setSelectedFilePath(null);
+    setSelectedCommitId(entry.commitId);
+  }
+
   function handleViewChanges() {
     setSelectedFilePath(null);
     setSelectedCommitId(WORKING_CHANGES_COMMIT_ID);
@@ -133,6 +142,7 @@ export function RepositoryWorkspace({
                     type="button"
                   >
                     <strong>Branches</strong>
+                    {isBranchesOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </button>
                 </div>
               </div>
@@ -158,26 +168,19 @@ export function RepositoryWorkspace({
                     type="button"
                   >
                     <strong>Stash</strong>
+                    {isStashOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </button>
                 </div>
               </div>
 
               {isStashOpen ? (
                 <div className={styles.sidebarSectionBody}>
-                  <div className={styles.mockList}>
-                    <button className={styles.mockItem} type="button">
-                      <span className={styles.mockItemTitle}>stash@&#123;0&#125;</span>
-                      <span className={styles.mockItemMeta}>WIP graph polish</span>
-                    </button>
-                    <button className={styles.mockItem} type="button">
-                      <span className={styles.mockItemTitle}>stash@&#123;1&#125;</span>
-                      <span className={styles.mockItemMeta}>Explore sidebar toggle</span>
-                    </button>
-                    <button className={styles.mockItem} type="button">
-                      <span className={styles.mockItemTitle}>stash@&#123;2&#125;</span>
-                      <span className={styles.mockItemMeta}>Theme probe mock</span>
-                    </button>
-                  </div>
+                  <StashPanel
+                    embedded
+                    onSelectStash={handleSelectStash}
+                    repositoryPath={selectedRepository.path}
+                    selectedCommitId={selectedCommitId}
+                  />
                 </div>
               ) : null}
             </section>

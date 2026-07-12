@@ -1,3 +1,4 @@
+import { GitMerge, Package } from "lucide-react";
 import { GraphCommit } from "@modules/graph/domain/commit";
 import {
   GRAPH_DOT_RADIUS,
@@ -23,6 +24,10 @@ export function CommitGraphSvg({
 }: CommitGraphSvgProps) {
   const dotX = GRAPH_SVG_PADDING_X + commit.lane * GRAPH_LANE_WIDTH;
   const dotY = GRAPH_ROW_HEIGHT * 0.5;
+  const isMergeCommit =
+    !commit.isWorkingChanges && !commit.isStash && commit.parents.length > 1;
+  const iconSize = GRAPH_DOT_RADIUS * 3;
+  const iconOffset = iconSize / 2;
 
   return (
     <svg
@@ -71,7 +76,7 @@ export function CommitGraphSvg({
           className={styles.graphLine}
           style={{
             stroke: resolveLaneColor(commit.lane),
-            strokeDasharray: commit.isWorkingChanges ? "4 3" : undefined
+            strokeDasharray: commit.isWorkingChanges ? "4 3" : commit.isStash ? "2 2" : undefined
           }}
           x1={dotX}
           x2={dotX}
@@ -91,17 +96,41 @@ export function CommitGraphSvg({
           />
         ))}
 
-      <circle
-        className={styles.graphDot}
-        cx={dotX}
-        cy={dotY}
-        r={GRAPH_DOT_RADIUS}
-        style={
-          commit.isWorkingChanges
-            ? { fill: "transparent", stroke: resolveLaneColor(commit.lane) }
-            : { fill: resolveLaneColor(commit.lane) }
-        }
-      />
+      {commit.isStash || isMergeCommit ? (
+        <circle cx={dotX} cy={dotY} r={GRAPH_DOT_RADIUS * 1.8} fill="var(--color-bg-elevated)" />
+      ) : null}
+
+      {commit.isStash ? (
+        <Package
+          color="var(--color-text-accent)"
+          height={iconSize}
+          strokeWidth={2.5}
+          width={iconSize}
+          x={dotX - iconOffset}
+          y={dotY - iconOffset}
+        />
+      ) : isMergeCommit ? (
+        <GitMerge
+          color={resolveLaneColor(commit.lane)}
+          height={iconSize}
+          strokeWidth={2.5}
+          width={iconSize}
+          x={dotX - iconOffset}
+          y={dotY - iconOffset}
+        />
+      ) : (
+        <circle
+          className={styles.graphDot}
+          cx={dotX}
+          cy={dotY}
+          r={GRAPH_DOT_RADIUS}
+          style={
+            commit.isWorkingChanges
+              ? { fill: "transparent", stroke: resolveLaneColor(commit.lane) }
+              : { fill: resolveLaneColor(commit.lane) }
+          }
+        />
+      )}
     </svg>
   );
 }

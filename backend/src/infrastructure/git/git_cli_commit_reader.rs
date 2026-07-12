@@ -19,7 +19,9 @@ impl CommitReader for GitCliCommitReader {
         let output = Command::new("git")
             .args([
                 "log",
-                "--all",
+                "--branches",
+                "--tags",
+                "--remotes",
                 "--topo-order",
                 "--decorate=short",
                 "--date=iso-strict",

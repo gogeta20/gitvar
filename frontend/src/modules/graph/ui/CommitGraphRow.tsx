@@ -51,7 +51,8 @@ export function CommitGraphRow({
 
   const rowClassName = [
     isSelected ? styles.commitRowActive : isBranchTarget ? styles.commitRowBranchTarget : styles.commitRow,
-    hasVisibleContent ? null : styles.commitRowCollapsedContent
+    hasVisibleContent ? null : styles.commitRowCollapsedContent,
+    commit.isStash ? styles.commitRowStash : null
   ]
     .filter(Boolean)
     .join(" ");
@@ -67,11 +68,13 @@ export function CommitGraphRow({
         {primary ? (
           <span
             className={
-              isBranchRefSelected
-                ? styles.refTextSelected
-                : isCurrentBranch
-                  ? styles.refTextCurrent
-                  : styles.refText
+              commit.isStash
+                ? styles.refTextStash
+                : isBranchRefSelected
+                  ? styles.refTextSelected
+                  : isCurrentBranch
+                    ? styles.refTextCurrent
+                    : styles.refText
             }
             title={primary}
           >
@@ -97,19 +100,27 @@ export function CommitGraphRow({
       {hasVisibleContent ? (
         <div className={styles.contentCell}>
           <div className={styles.mainRow}>
-            {showAuthor && !commit.isWorkingChanges ? (
+            {showAuthor && !commit.isWorkingChanges && !commit.isStash ? (
               <span className={styles.authorCell}>{commit.authorName}</span>
             ) : null}
 
             {showMessage ? (
               <div className={styles.messageCell}>
-                <strong className={commit.isWorkingChanges ? styles.workingChangesMessage : undefined}>
+                <strong
+                  className={
+                    commit.isStash
+                      ? styles.stashMessage
+                      : commit.isWorkingChanges
+                        ? styles.workingChangesMessage
+                        : undefined
+                  }
+                >
                   {commit.message}
                 </strong>
               </div>
             ) : null}
 
-            {showDate && !commit.isWorkingChanges ? (
+            {showDate && !commit.isWorkingChanges && !commit.isStash ? (
               <span className={styles.dateCell}>{formatDateLabel(commit.authoredAt)}</span>
             ) : null}
           </div>

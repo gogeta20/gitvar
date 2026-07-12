@@ -7,6 +7,7 @@ export interface Commit {
   authoredAt: string;
   message: string;
   isWorkingChanges?: boolean;
+  isStash?: boolean;
 }
 
 export interface GraphCommit extends Commit {
