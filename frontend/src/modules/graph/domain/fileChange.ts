@@ -3,4 +3,5 @@ export type FileChangeType = "added" | "modified" | "deleted" | "renamed" | "unt
 export interface FileChange {
   path: string;
   changeType: FileChangeType;
+  isStaged: boolean;
 }

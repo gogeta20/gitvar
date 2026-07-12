@@ -6,6 +6,7 @@ use gitmap_backend::infrastructure::git::GitCliCommitReader;
 use gitmap_backend::infrastructure::git::GitCliFileDiffReader;
 use gitmap_backend::infrastructure::git::GitCliStashReader;
 use gitmap_backend::infrastructure::git::GitCliStatusReader;
+use gitmap_backend::infrastructure::git::GitCliWorkingChangesWriter;
 use gitmap_backend::presentation::cli::run;
 use gitmap_backend::presentation::http::serve;
 
@@ -18,6 +19,7 @@ fn main() {
     let stash_reader = GitCliStashReader::new();
     let directory_browser = FsDirectoryBrowser::new();
     let repo_signature_reader = FsRepoSignatureReader::new();
+    let working_changes_writer = GitCliWorkingChangesWriter::new();
 
     let command = std::env::args().nth(1);
     let result = match command.as_deref() {
@@ -30,6 +32,7 @@ fn main() {
             &stash_reader,
             &directory_browser,
             &repo_signature_reader,
+            &working_changes_writer,
         ),
         _ => run(&branch_reader),
     };

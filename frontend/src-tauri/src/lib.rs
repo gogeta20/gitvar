@@ -6,6 +6,7 @@ use gitmap_backend::infrastructure::git::GitCliCommitReader;
 use gitmap_backend::infrastructure::git::GitCliFileDiffReader;
 use gitmap_backend::infrastructure::git::GitCliStashReader;
 use gitmap_backend::infrastructure::git::GitCliStatusReader;
+use gitmap_backend::infrastructure::git::GitCliWorkingChangesWriter;
 use gitmap_backend::presentation::http::serve;
 
 fn spawn_backend_server() {
@@ -18,6 +19,7 @@ fn spawn_backend_server() {
     let stash_reader = GitCliStashReader::new();
     let directory_browser = FsDirectoryBrowser::new();
     let repo_signature_reader = FsRepoSignatureReader::new();
+    let working_changes_writer = GitCliWorkingChangesWriter::new();
 
     if let Err(error) = serve(
       &branch_reader,
@@ -28,6 +30,7 @@ fn spawn_backend_server() {
       &stash_reader,
       &directory_browser,
       &repo_signature_reader,
+      &working_changes_writer,
     ) {
       eprintln!("GitMap backend stopped: {error}");
     }

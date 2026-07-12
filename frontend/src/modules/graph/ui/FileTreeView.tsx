@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Pencil, Plus, Trash2, Undo2 } from "lucide-react";
 import { collectFilesInEntry } from "@modules/graph/lib/buildFileTree";
 import { changeTypeLetter } from "@modules/graph/lib/changeTypeLetter";
 import { countByChangeType } from "@modules/graph/lib/countByChangeType";
@@ -13,6 +13,9 @@ interface FileTreeViewProps {
   colorizeFileNames: boolean;
   onToggleFolder: (path: string) => void;
   onSelectFile: (path: string) => void;
+  onStageFile?: (path: string) => void;
+  onUnstageFile?: (path: string) => void;
+  onDiscardFile?: (path: string) => void;
 }
 
 export function FileTreeView({
@@ -22,7 +25,10 @@ export function FileTreeView({
   selectedFilePath,
   colorizeFileNames,
   onToggleFolder,
-  onSelectFile
+  onSelectFile,
+  onStageFile,
+  onUnstageFile,
+  onDiscardFile
 }: FileTreeViewProps) {
   return (
     <>
@@ -31,7 +37,7 @@ export function FileTreeView({
 
         if (entry.type === "file") {
           return (
-            <div key={entry.path} style={indent}>
+            <div className={styles.fileListItemRow} key={entry.path} style={indent}>
               <button
                 className={
                   entry.path === selectedFilePath ? styles.fileListItemActive : styles.fileListItem
@@ -52,6 +58,44 @@ export function FileTreeView({
                   {changeTypeLetter(entry.file.changeType)}
                 </span>
               </button>
+
+              {onStageFile || onUnstageFile || onDiscardFile ? (
+                <div className={styles.fileActions}>
+                  {entry.file.isStaged && onUnstageFile ? (
+                    <button
+                      aria-label="Unstage file"
+                      className={`${styles.fileActionButton} ${styles.fileActionButtonUnstage}`}
+                      onClick={() => onUnstageFile(entry.path)}
+                      title="Unstage"
+                      type="button"
+                    >
+                      <Undo2 size={12} />
+                    </button>
+                  ) : null}
+                  {!entry.file.isStaged && onStageFile ? (
+                    <button
+                      aria-label="Stage file"
+                      className={`${styles.fileActionButton} ${styles.fileActionButtonStage}`}
+                      onClick={() => onStageFile(entry.path)}
+                      title="Stage"
+                      type="button"
+                    >
+                      <Check size={12} />
+                    </button>
+                  ) : null}
+                  {!entry.file.isStaged && onDiscardFile ? (
+                    <button
+                      aria-label="Discard changes"
+                      className={`${styles.fileActionButton} ${styles.fileActionButtonDiscard}`}
+                      onClick={() => onDiscardFile(entry.path)}
+                      title="Discard"
+                      type="button"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           );
         }
@@ -98,8 +142,11 @@ export function FileTreeView({
                 depth={depth + 1}
                 entries={entry.children}
                 expandedPaths={expandedPaths}
+                onDiscardFile={onDiscardFile}
                 onSelectFile={onSelectFile}
+                onStageFile={onStageFile}
                 onToggleFolder={onToggleFolder}
+                onUnstageFile={onUnstageFile}
                 selectedFilePath={selectedFilePath}
               />
             ) : null}

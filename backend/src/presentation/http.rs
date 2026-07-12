@@ -18,6 +18,10 @@ use crate::app::stash::contracts::StashReader;
 use crate::app::stash::read_stash::read_stash;
 use crate::app::status::contracts::StatusReader;
 use crate::app::status::read_status::read_status;
+use crate::app::working_changes::contracts::WorkingChangesWriter;
+use crate::app::working_changes::discard_file::discard_file;
+use crate::app::working_changes::stage_file::stage_file;
+use crate::app::working_changes::unstage_file::unstage_file;
 use crate::domain::branch::Branch;
 use crate::domain::commit::Commit;
 use crate::domain::directory_entry::{DirectoryEntry, DirectoryListing};
@@ -35,6 +39,7 @@ pub fn serve(
     stash_reader: &dyn StashReader,
     directory_browser: &dyn DirectoryBrowser,
     repo_signature_reader: &dyn RepoSignatureReader,
+    working_changes_writer: &dyn WorkingChangesWriter,
 ) -> Result<(), AppError> {
     let listener = TcpListener::bind("0.0.0.0:7879")
         .map_err(|error| AppError::IoError(error.to_string()))?;
@@ -64,6 +69,7 @@ pub fn serve(
             stash_reader,
             directory_browser,
             repo_signature_reader,
+            working_changes_writer,
         );
 
         stream
@@ -84,6 +90,7 @@ fn route_request(
     stash_reader: &dyn StashReader,
     directory_browser: &dyn DirectoryBrowser,
     repo_signature_reader: &dyn RepoSignatureReader,
+    working_changes_writer: &dyn WorkingChangesWriter,
 ) -> String {
     let Some(first_line) = request.lines().next() else {
         return json_response(400, r#"{"error":"Invalid request."}"#);
@@ -92,6 +99,27 @@ fn route_request(
     let mut parts = first_line.split_whitespace();
     let method = parts.next().unwrap_or_default();
     let target = parts.next().unwrap_or_default();
+
+    if target.starts_with("/api/stage-file") {
+        if method != "POST" {
+            return json_response(405, r#"{"error":"Method not allowed."}"#);
+        }
+        return handle_stage_file_request(target, working_changes_writer);
+    }
+
+    if target.starts_with("/api/unstage-file") {
+        if method != "POST" {
+            return json_response(405, r#"{"error":"Method not allowed."}"#);
+        }
+        return handle_unstage_file_request(target, working_changes_writer);
+    }
+
+    if target.starts_with("/api/discard-file") {
+        if method != "POST" {
+            return json_response(405, r#"{"error":"Method not allowed."}"#);
+        }
+        return handle_discard_file_request(target, working_changes_writer);
+    }
 
     if method != "GET" {
         return json_response(405, r#"{"error":"Method not allowed."}"#);
@@ -259,6 +287,60 @@ fn handle_repo_signature_request(
     }
 }
 
+fn handle_stage_file_request(target: &str, working_changes_writer: &dyn WorkingChangesWriter) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    let Some(file_path) = extract_query_param(target, "path") else {
+        return json_response(400, r#"{"error":"Missing path query parameter."}"#);
+    };
+
+    match stage_file(working_changes_writer, &path, &file_path) {
+        Ok(()) => json_response(200, r#"{"ok":true}"#),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_unstage_file_request(target: &str, working_changes_writer: &dyn WorkingChangesWriter) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    let Some(file_path) = extract_query_param(target, "path") else {
+        return json_response(400, r#"{"error":"Missing path query parameter."}"#);
+    };
+
+    match unstage_file(working_changes_writer, &path, &file_path) {
+        Ok(()) => json_response(200, r#"{"ok":true}"#),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_discard_file_request(target: &str, working_changes_writer: &dyn WorkingChangesWriter) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    let Some(file_path) = extract_query_param(target, "path") else {
+        return json_response(400, r#"{"error":"Missing path query parameter."}"#);
+    };
+
+    match discard_file(working_changes_writer, &path, &file_path) {
+        Ok(()) => json_response(200, r#"{"ok":true}"#),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
 fn default_browse_root() -> PathBuf {
     std::env::var("GITMAP_BROWSE_ROOT")
         .map(PathBuf::from)
@@ -373,9 +455,10 @@ fn file_changes_to_json(files: &[FileChange]) -> String {
         .iter()
         .map(|file| {
             format!(
-                r#"{{"path":"{}","changeType":"{}"}}"#,
+                r#"{{"path":"{}","changeType":"{}","isStaged":{}}}"#,
                 escape_json(&file.path),
                 file_change_type_to_json(file.change_type),
+                file.is_staged,
             )
         })
         .collect::<Vec<_>>()

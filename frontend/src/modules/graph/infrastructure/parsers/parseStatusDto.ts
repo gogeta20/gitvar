@@ -4,6 +4,7 @@ import { WorkingStatus } from "@modules/graph/domain/workingStatus";
 interface FileChangeDto {
   path: string;
   changeType: FileChange["changeType"];
+  isStaged: boolean;
 }
 
 interface StatusResponseDto {
@@ -18,7 +19,8 @@ export function parseStatusDto(input: StatusResponseDto): WorkingStatus {
     headCommitId: input.headCommitId,
     changedFiles: input.changedFiles.map((file) => ({
       path: file.path,
-      changeType: file.changeType
+      changeType: file.changeType,
+      isStaged: file.isStaged
     }))
   };
 }

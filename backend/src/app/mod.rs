@@ -6,3 +6,4 @@ pub mod file_diff;
 pub mod repo_signature;
 pub mod stash;
 pub mod status;
+pub mod working_changes;
