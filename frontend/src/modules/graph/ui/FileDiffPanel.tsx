@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen
+} from "lucide-react";
+import { IconButton } from "@core/components/IconButton";
 import { InfoCard } from "@core/components/InfoCard";
 import { readFileDiff } from "@modules/graph/application/use-cases/readFileDiff";
 import { createFileDiffReader } from "@modules/graph/infrastructure/FileDiffReaderProvider";
@@ -10,10 +17,23 @@ interface FileDiffPanelProps {
   repositoryPath: string;
   commitId: string;
   filePath: string;
+  isSidebarOpen: boolean;
+  isDetailOpen: boolean;
+  onToggleSidebar: () => void;
+  onToggleDetail: () => void;
   onClose: () => void;
 }
 
-export function FileDiffPanel({ repositoryPath, commitId, filePath, onClose }: FileDiffPanelProps) {
+export function FileDiffPanel({
+  repositoryPath,
+  commitId,
+  filePath,
+  isSidebarOpen,
+  isDetailOpen,
+  onToggleSidebar,
+  onToggleDetail,
+  onClose
+}: FileDiffPanelProps) {
   const [diffText, setDiffText] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -37,13 +57,29 @@ export function FileDiffPanel({ repositoryPath, commitId, filePath, onClose }: F
   return (
     <InfoCard
       fillHeight
-      headerActions={
-        <button className={styles.backButton} onClick={onClose} type="button">
-          <ArrowLeft size={14} />
-          Back to graph
-        </button>
+      title={
+        <div className={styles.headerCluster}>
+          <IconButton
+            icon={isSidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+            label={isSidebarOpen ? "Hide sidebar" : "Show sidebar"}
+            onClick={onToggleSidebar}
+          />
+          <span className={styles.filePathTitle}>{filePath}</span>
+        </div>
       }
-      title={filePath}
+      headerActions={
+        <div className={styles.headerCluster}>
+          <button className={styles.backButton} onClick={onClose} type="button">
+            <ArrowLeft size={14} />
+            Back to graph
+          </button>
+          <IconButton
+            icon={isDetailOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
+            label={isDetailOpen ? "Hide commit detail panel" : "Show commit detail panel"}
+            onClick={onToggleDetail}
+          />
+        </div>
+      }
     >
       {error ? <p className={styles.error}>{error}</p> : null}
 

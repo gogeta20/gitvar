@@ -1,3 +1,10 @@
+.headerCluster {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
 .commitList {
   display: grid;
   gap: 0;
