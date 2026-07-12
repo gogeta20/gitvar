@@ -61,7 +61,12 @@ export function CommitGraphRow({
     <button
       className={rowClassName}
       onClick={onSelect}
-      style={{ "--lane-color": laneColor } as CSSProperties}
+      style={
+        {
+          "--lane-color": laneColor,
+          "--graph-width": `${graphWidth}px`
+        } as CSSProperties
+      }
       type="button"
     >
       <div className={styles.refsCell}>

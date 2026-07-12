@@ -1,7 +1,8 @@
-export const GRAPH_LANE_WIDTH = 24;
+export const GRAPH_LANE_WIDTH = 28;
 export const GRAPH_ROW_HEIGHT = 34;
 export const GRAPH_SVG_PADDING_X = 10;
 export const GRAPH_DOT_RADIUS = 4;
+export const GRAPH_MIN_WIDTH = 92;
 
 const GRAPH_LANE_COLORS = [
   "var(--color-graph-lane-0)",
@@ -15,9 +16,10 @@ export function resolveLaneColor(lane: number): string {
 }
 
 export function calculateGraphWidth(maxLaneCount: number): number {
-  return (
+  return Math.max(
+    GRAPH_MIN_WIDTH,
     GRAPH_SVG_PADDING_X * 2 +
-    Math.max(1, maxLaneCount - 1) * GRAPH_LANE_WIDTH +
-    2
+      Math.max(1, maxLaneCount - 1) * GRAPH_LANE_WIDTH +
+      2
   );
 }

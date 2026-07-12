@@ -11,7 +11,7 @@
 .commitRowActive,
 .commitRowBranchTarget {
   display: grid;
-  grid-template-columns: minmax(180px, 320px) auto minmax(0, 1fr);
+  grid-template-columns: minmax(180px, 320px) var(--graph-width, 76px) minmax(0, 1fr);
   align-items: center;
   column-gap: 12px;
   width: 100%;
@@ -26,7 +26,7 @@
 }
 
 .commitRowCollapsedContent {
-  grid-template-columns: minmax(180px, 1fr) auto;
+  grid-template-columns: minmax(180px, 1fr) var(--graph-width, 76px);
 }
 
 .commitRowStash {
@@ -53,8 +53,8 @@
 }
 
 .graphSvg {
-  width: 76px;
-  min-width: 76px;
+  width: var(--graph-width, 76px);
+  min-width: var(--graph-width, 76px);
   height: 34px;
   overflow: visible;
   display: block;
@@ -72,10 +72,12 @@
 
 .graphCell {
   position: relative;
+  width: var(--graph-width, 76px);
+  min-width: var(--graph-width, 76px);
   min-height: 34px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   border-left: 1px solid color-mix(in srgb, var(--lane-color) 50%, transparent);
   border-right: 1px solid color-mix(in srgb, var(--lane-color) 35%, transparent);
   background: linear-gradient(
