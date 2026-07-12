@@ -2,7 +2,7 @@ import { PropsWithChildren, ReactNode } from "react";
 import styles from "./InfoCard.module.css";
 
 interface InfoCardProps extends PropsWithChildren {
-  title?: string;
+  title?: ReactNode;
   headerActions?: ReactNode;
   /** Stretches the card to fill its container's height and scrolls the body instead of the page. */
   fillHeight?: boolean;

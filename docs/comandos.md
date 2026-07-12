@@ -29,9 +29,26 @@ Ejecutar dentro del contenedor:
 
 - `cd frontend && npm install`: instala dependencias (necesario la primera vez o tras `make clean`).
 - `cd frontend && npm run dev -- --host 0.0.0.0`: levanta Vite accesible desde el host en `http://localhost:5173/`.
-- `cd frontend && npm run check`: verifica tipos con `tsc --noEmit`.
+- `cd frontend && npm run check`: verifica tipos (`tsc -b --noEmit tsconfig.app.json`; el proyecto usa project references, por lo que un `tsc --noEmit` sin `-b` no revisa nada realmente).
 - `cd frontend && npm run build`: compila para produccion (`tsc -b && vite build`).
 - `cd frontend && npm run preview`: sirve el build de produccion.
+
+## Navegar carpetas del host fuera del proyecto (opcional, por desarrollador)
+
+El navegador de carpetas de "Open a folder" solo ve lo que este montado dentro del contenedor. Por defecto el contenedor solo monta la carpeta del proyecto (`/workspace`); el resto del filesystem del host no es visible ahi.
+
+Para poder abrir OTROS repos del host desde esa pantalla, cada desarrollador debe crear su propio `docker-compose.override.yml` (gitignoreado, no se versiona) con su propia ruta, por ejemplo:
+
+```yaml
+services:
+  dev:
+    volumes:
+      - /ruta/a/tus/proyectos:/host/projects:ro
+    environment:
+      - GITMAP_BROWSE_ROOT=/host/projects
+```
+
+`docker compose up` mezcla automaticamente ese archivo si existe. Sin el override, el navegador de carpetas arranca en `/workspace` (siempre valido, no depende de la maquina de nadie).
 
 ## Flujo tipico para retomar el proyecto
 
