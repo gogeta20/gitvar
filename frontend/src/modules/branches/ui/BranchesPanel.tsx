@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Cloud, ListFilter } from "lucide-react";
 import { InfoCard } from "@core/components/InfoCard";
 import { usePersistedState } from "@core/hooks/usePersistedState";
@@ -28,6 +28,11 @@ export function BranchesPanel({
     "gitmap.branches.orderMode",
     "alphabetical"
   );
+  const selectedItemRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    selectedItemRef.current?.scrollIntoView({ block: "nearest" });
+  }, [selectedBranchName]);
 
   useEffect(() => {
     const branchReader = createBranchReader();
@@ -142,6 +147,7 @@ export function BranchesPanel({
                 key={branch.fullRef}
                 className={itemClassName}
                 onClick={() => onSelectBranch(branch)}
+                ref={isSelected ? selectedItemRef : undefined}
                 type="button"
               >
                 <span className={styles.branchRowContent}>

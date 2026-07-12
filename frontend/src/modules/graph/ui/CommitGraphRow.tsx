@@ -21,6 +21,7 @@ interface CommitGraphRowProps {
   showDate: boolean;
   showMessage: boolean;
   onSelect: () => void;
+  rowRef?: (element: HTMLButtonElement | null) => void;
 }
 
 function formatDateLabel(input: string): string {
@@ -45,7 +46,8 @@ export function CommitGraphRow({
   showAuthor,
   showDate,
   showMessage,
-  onSelect
+  onSelect,
+  rowRef
 }: CommitGraphRowProps) {
   const laneColor = resolveLaneColor(commit.lane);
   const { primary, otherRefs, isCurrentBranch } = resolveCommitRefs(
@@ -66,6 +68,7 @@ export function CommitGraphRow({
     <button
       className={rowClassName}
       onClick={onSelect}
+      ref={rowRef}
       style={
         {
           "--lane-color": laneColor,
