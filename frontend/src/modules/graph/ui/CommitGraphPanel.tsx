@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { InfoCard } from "@core/components/InfoCard";
 import { usePersistedState } from "@core/hooks/usePersistedState";
 import { readCommits } from "@modules/graph/application/use-cases/readCommits";
@@ -9,7 +10,10 @@ import { createCommitReader } from "@modules/graph/infrastructure/CommitReaderPr
 import { createStatusReader } from "@modules/graph/infrastructure/StatusReaderProvider";
 import { buildGraphCommits } from "@modules/graph/lib/buildGraphCommits";
 import { insertStashCommits } from "@modules/graph/lib/insertStashCommits";
-import { calculateGraphWidth } from "@modules/graph/render/graphRenderConfig";
+import {
+  calculateGraphWidth,
+  resolveGraphLayout
+} from "@modules/graph/render/graphRenderConfig";
 import { CommitGraphRow } from "@modules/graph/ui/CommitGraphRow";
 import { HistoryMapOptionsMenu } from "@modules/graph/ui/HistoryMapOptionsMenu";
 import { readStash } from "@modules/stash/application/use-cases/readStash";
@@ -41,6 +45,9 @@ export function CommitGraphPanel({
   const [showAuthor, setShowAuthor] = usePersistedState("gitmap.historyMap.showAuthor", true);
   const [showDate, setShowDate] = usePersistedState("gitmap.historyMap.showDate", true);
   const [showMessage, setShowMessage] = usePersistedState("gitmap.historyMap.showMessage", true);
+  const topScrollbarRef = useRef<HTMLDivElement | null>(null);
+  const contentViewportRef = useRef<HTMLDivElement | null>(null);
+  const isSyncingScrollRef = useRef(false);
 
   useEffect(() => {
     const commitReader = createCommitReader();
@@ -98,14 +105,43 @@ export function CommitGraphPanel({
     [commitsWithSynthetic]
   );
 
-  const graphWidth = useMemo(() => {
-    const maxLaneCount = graphCommits.reduce(
-      (max, commit) => Math.max(max, commit.laneCount),
-      1
-    );
+  const maxLaneCount = useMemo(
+    () => graphCommits.reduce((max, commit) => Math.max(max, commit.laneCount), 1),
+    [graphCommits]
+  );
 
-    return calculateGraphWidth(maxLaneCount);
-  }, [graphCommits]);
+  const graphLayout = useMemo(
+    () => resolveGraphLayout(maxLaneCount),
+    [maxLaneCount]
+  );
+
+  const graphWidth = useMemo(
+    () => calculateGraphWidth(maxLaneCount, graphLayout),
+    [graphLayout, maxLaneCount]
+  );
+
+  const historyMinWidth = useMemo(() => {
+    const contentMinWidth =
+      (showMessage ? 420 : 0) +
+      (showAuthor ? graphLayout.authorMaxWidth + 24 : 0) +
+      (showDate ? 132 : 0);
+
+    return (
+      graphLayout.refColumnMaxWidth +
+      graphWidth +
+      contentMinWidth +
+      graphLayout.rowColumnGap * 2 +
+      48
+    );
+  }, [
+    graphLayout.authorMaxWidth,
+    graphLayout.refColumnMaxWidth,
+    graphLayout.rowColumnGap,
+    graphWidth,
+    showAuthor,
+    showDate,
+    showMessage
+  ]);
 
   useEffect(() => {
     onCommitsLoaded?.(graphCommits);
@@ -120,6 +156,26 @@ export function CommitGraphPanel({
       onSelectCommit(firstRealCommit.id);
     }
   }, [graphCommits, onSelectCommit, selectedCommitId]);
+
+  function syncHorizontalScroll(
+    source: HTMLDivElement | null,
+    target: HTMLDivElement | null
+  ) {
+    if (!source || !target) {
+      return;
+    }
+
+    if (isSyncingScrollRef.current) {
+      return;
+    }
+
+    isSyncingScrollRef.current = true;
+    target.scrollLeft = source.scrollLeft;
+
+    requestAnimationFrame(() => {
+      isSyncingScrollRef.current = false;
+    });
+  }
 
   return (
     <InfoCard
@@ -138,29 +194,56 @@ export function CommitGraphPanel({
       {error ? <p className={styles.error}>{error}</p> : null}
 
       {!error ? (
-        <div className={styles.commitList}>
-          {graphCommits.map((commit) => (
-            <CommitGraphRow
-              key={commit.id}
-              commit={commit}
-              graphWidth={graphWidth}
-              selectedBranchName={selectedBranchName}
-              showAuthor={showAuthor}
-              showDate={showDate}
-              showMessage={showMessage}
-              isBranchRefSelected={Boolean(
-                selectedBranchName &&
-                  commit.refs.some(
-                    (ref) =>
-                      ref === selectedBranchName ||
-                      ref === `HEAD -> ${selectedBranchName}`
-                  )
-              )}
-              isBranchTarget={commit.id === selectedBranchTargetCommit}
-              isSelected={commit.id === selectedCommitId}
-              onSelect={() => onSelectCommit(commit.id)}
-            />
-          ))}
+        <div
+          ref={topScrollbarRef}
+          className={styles.topScrollbar}
+          onScroll={() =>
+            syncHorizontalScroll(topScrollbarRef.current, contentViewportRef.current)
+          }
+        >
+          <div
+            className={styles.topScrollbarInner}
+            style={{ "--history-min-width": `${historyMinWidth}px` } as CSSProperties}
+          />
+        </div>
+      ) : null}
+
+      {!error ? (
+        <div
+          ref={contentViewportRef}
+          className={styles.commitListViewport}
+          onScroll={() =>
+            syncHorizontalScroll(contentViewportRef.current, topScrollbarRef.current)
+          }
+        >
+          <div
+            className={styles.commitList}
+            style={{ "--history-min-width": `${historyMinWidth}px` } as CSSProperties}
+          >
+            {graphCommits.map((commit) => (
+              <CommitGraphRow
+                key={commit.id}
+                commit={commit}
+                graphLayout={graphLayout}
+                graphWidth={graphWidth}
+                selectedBranchName={selectedBranchName}
+                showAuthor={showAuthor}
+                showDate={showDate}
+                showMessage={showMessage}
+                isBranchRefSelected={Boolean(
+                  selectedBranchName &&
+                    commit.refs.some(
+                      (ref) =>
+                        ref === selectedBranchName ||
+                        ref === `HEAD -> ${selectedBranchName}`
+                    )
+                )}
+                isBranchTarget={commit.id === selectedBranchTargetCommit}
+                isSelected={commit.id === selectedCommitId}
+                onSelect={() => onSelectCommit(commit.id)}
+              />
+            ))}
+          </div>
         </div>
       ) : null}
 
