@@ -37,6 +37,7 @@ fn parse_branch_line(line: &str) -> Result<Branch, AppError> {
         is_remote: full_ref.starts_with("refs/remotes/"),
         is_current: is_current == "true",
         target_commit: target_commit.to_string(),
+        created_at: None,
     })
 }
 

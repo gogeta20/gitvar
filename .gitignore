@@ -15,6 +15,9 @@ target/
 .env
 .env.local
 
+# Local DB artifacts
+db/*.sqlite
+
 # Editor
 .idea/
 .vscode/

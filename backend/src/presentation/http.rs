@@ -10,12 +10,15 @@ use crate::app::commits::contracts::CommitReader;
 use crate::app::commits::read_commits::read_commits;
 use crate::app::file_diff::contracts::FileDiffReader;
 use crate::app::file_diff::read_file_diff::read_file_diff;
+use crate::app::stash::contracts::StashReader;
+use crate::app::stash::read_stash::read_stash;
 use crate::app::status::contracts::StatusReader;
 use crate::app::status::read_status::read_status;
 use crate::domain::branch::Branch;
 use crate::domain::commit::Commit;
 use crate::domain::errors::AppError;
 use crate::domain::file_change::{FileChange, FileChangeType};
+use crate::domain::stash_entry::StashEntry;
 use crate::domain::working_status::WorkingStatus;
 
 pub fn serve(
@@ -24,11 +27,12 @@ pub fn serve(
     status_reader: &dyn StatusReader,
     commit_files_reader: &dyn CommitFilesReader,
     file_diff_reader: &dyn FileDiffReader,
+    stash_reader: &dyn StashReader,
 ) -> Result<(), AppError> {
-    let listener = TcpListener::bind("0.0.0.0:7878")
+    let listener = TcpListener::bind("0.0.0.0:7879")
         .map_err(|error| AppError::IoError(error.to_string()))?;
 
-    println!("GitMap backend listening on http://0.0.0.0:7878");
+    println!("GitMap backend listening on http://0.0.0.0:7879");
 
     for stream in listener.incoming() {
         let mut stream = stream.map_err(|error| AppError::IoError(error.to_string()))?;
@@ -50,6 +54,7 @@ pub fn serve(
             status_reader,
             commit_files_reader,
             file_diff_reader,
+            stash_reader,
         );
 
         stream
@@ -67,6 +72,7 @@ fn route_request(
     status_reader: &dyn StatusReader,
     commit_files_reader: &dyn CommitFilesReader,
     file_diff_reader: &dyn FileDiffReader,
+    stash_reader: &dyn StashReader,
 ) -> String {
     let Some(first_line) = request.lines().next() else {
         return json_response(400, r#"{"error":"Invalid request."}"#);
@@ -98,6 +104,10 @@ fn route_request(
 
     if target.starts_with("/api/file-diff") {
         return handle_file_diff_request(target, file_diff_reader);
+    }
+
+    if target.starts_with("/api/stash") {
+        return handle_stash_request(target, stash_reader);
     }
 
     json_response(404, r#"{"error":"Not found."}"#)
@@ -185,6 +195,20 @@ fn handle_file_diff_request(target: &str, file_diff_reader: &dyn FileDiffReader)
     }
 }
 
+fn handle_stash_request(target: &str, stash_reader: &dyn StashReader) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    match read_stash(stash_reader, &path) {
+        Ok(entries) => json_response(200, &format!(r#"{{"entries":[{}]}}"#, stash_entries_to_json(&entries))),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
 fn extract_repo_path(target: &str) -> Option<PathBuf> {
     extract_query_param(target, "repoPath").map(PathBuf::from)
 }
@@ -210,6 +234,7 @@ fn branches_to_json(branches: &[Branch]) -> String {
                     r#""fullRef":"{}","#,
                     r#""isRemote":{},"#,
                     r#""isCurrent":{},"#,
+                    r#""createdAt":"{}","#,
                     r#""targetCommit":"{}""#,
                     "}}"
                 ),
@@ -217,6 +242,7 @@ fn branches_to_json(branches: &[Branch]) -> String {
                 escape_json(&branch.full_ref),
                 branch.is_remote,
                 branch.is_current,
+                escape_json(branch.created_at.as_deref().unwrap_or("")),
                 escape_json(&branch.target_commit),
             )
         })
@@ -308,6 +334,35 @@ fn file_change_type_to_json(change_type: FileChangeType) -> &'static str {
         FileChangeType::Renamed => "renamed",
         FileChangeType::Untracked => "untracked",
     }
+}
+
+fn stash_entries_to_json(entries: &[StashEntry]) -> String {
+    entries
+        .iter()
+        .map(|entry| {
+            format!(
+                concat!(
+                    "{{",
+                    r#""reference":"{}","#,
+                    r#""index":{},"#,
+                    r#""commitId":"{}","#,
+                    r#""shortCommitId":"{}","#,
+                    r#""baseCommitId":"{}","#,
+                    r#""createdAt":"{}","#,
+                    r#""message":"{}""#,
+                    "}}"
+                ),
+                escape_json(&entry.reference),
+                entry.index,
+                escape_json(&entry.commit_id),
+                escape_json(&entry.short_commit_id),
+                escape_json(&entry.base_commit_id),
+                escape_json(&entry.created_at),
+                escape_json(&entry.message),
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",")
 }
 
 fn json_response(status_code: u16, body: &str) -> String {

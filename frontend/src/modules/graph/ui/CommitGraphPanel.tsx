@@ -8,9 +8,13 @@ import { WorkingStatus, WORKING_CHANGES_COMMIT_ID } from "@modules/graph/domain/
 import { createCommitReader } from "@modules/graph/infrastructure/CommitReaderProvider";
 import { createStatusReader } from "@modules/graph/infrastructure/StatusReaderProvider";
 import { buildGraphCommits } from "@modules/graph/lib/buildGraphCommits";
+import { insertStashCommits } from "@modules/graph/lib/insertStashCommits";
 import { calculateGraphWidth } from "@modules/graph/render/graphRenderConfig";
 import { CommitGraphRow } from "@modules/graph/ui/CommitGraphRow";
 import { HistoryMapOptionsMenu } from "@modules/graph/ui/HistoryMapOptionsMenu";
+import { readStash } from "@modules/stash/application/use-cases/readStash";
+import { StashEntry } from "@modules/stash/domain/stashEntry";
+import { createStashReader } from "@modules/stash/infrastructure/StashReaderProvider";
 import styles from "./CommitGraphPanel.module.css";
 
 interface CommitGraphPanelProps {
@@ -32,6 +36,7 @@ export function CommitGraphPanel({
 }: CommitGraphPanelProps) {
   const [commits, setCommits] = useState<Commit[]>([]);
   const [workingStatus, setWorkingStatus] = useState<WorkingStatus | null>(null);
+  const [stashEntries, setStashEntries] = useState<StashEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showAuthor, setShowAuthor] = usePersistedState("gitmap.historyMap.showAuthor", true);
   const [showDate, setShowDate] = usePersistedState("gitmap.historyMap.showDate", true);
@@ -40,20 +45,24 @@ export function CommitGraphPanel({
   useEffect(() => {
     const commitReader = createCommitReader();
     const statusReader = createStatusReader();
+    const stashReader = createStashReader();
 
     setError(null);
 
     Promise.all([
       readCommits(commitReader, repositoryPath),
-      readStatus(statusReader, repositoryPath)
+      readStatus(statusReader, repositoryPath),
+      readStash(stashReader, repositoryPath)
     ])
-      .then(([nextCommits, nextStatus]) => {
+      .then(([nextCommits, nextStatus, nextStashEntries]) => {
         setCommits(nextCommits);
         setWorkingStatus(nextStatus);
+        setStashEntries(nextStashEntries);
       })
       .catch((currentError: unknown) => {
         setCommits([]);
         setWorkingStatus(null);
+        setStashEntries([]);
         setError(
           currentError instanceof Error ? currentError.message : "Unexpected error."
         );
@@ -79,9 +88,14 @@ export function CommitGraphPanel({
     return [workingChangesCommit, ...commits];
   }, [commits, workingStatus]);
 
+  const commitsWithSynthetic = useMemo(
+    () => insertStashCommits(commitsWithWorkingChanges, stashEntries),
+    [commitsWithWorkingChanges, stashEntries]
+  );
+
   const graphCommits = useMemo(
-    () => buildGraphCommits(commitsWithWorkingChanges),
-    [commitsWithWorkingChanges]
+    () => buildGraphCommits(commitsWithSynthetic),
+    [commitsWithSynthetic]
   );
 
   const graphWidth = useMemo(() => {
@@ -100,7 +114,8 @@ export function CommitGraphPanel({
   useEffect(() => {
     if (graphCommits.length > 0 && !selectedCommitId) {
       const firstRealCommit =
-        graphCommits.find((commit) => !commit.isWorkingChanges) ?? graphCommits[0];
+        graphCommits.find((commit) => !commit.isWorkingChanges && !commit.isStash) ??
+        graphCommits[0];
 
       onSelectCommit(firstRealCommit.id);
     }
