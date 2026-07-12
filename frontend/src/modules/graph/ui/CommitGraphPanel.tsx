@@ -35,6 +35,7 @@ interface CommitGraphPanelProps {
   onToggleDetail: () => void;
   onSelectCommit: (commitId: string) => void;
   onCommitsLoaded?: (commits: GraphCommit[]) => void;
+  refreshToken?: number;
 }
 
 export function CommitGraphPanel({
@@ -47,7 +48,8 @@ export function CommitGraphPanel({
   onToggleSidebar,
   onToggleDetail,
   onSelectCommit,
-  onCommitsLoaded
+  onCommitsLoaded,
+  refreshToken
 }: CommitGraphPanelProps) {
   const [commits, setCommits] = useState<Commit[]>([]);
   const [workingStatus, setWorkingStatus] = useState<WorkingStatus | null>(null);
@@ -86,7 +88,7 @@ export function CommitGraphPanel({
           currentError instanceof Error ? currentError.message : "Unexpected error."
         );
       });
-  }, [repositoryPath]);
+  }, [repositoryPath, refreshToken]);
 
   const commitsWithWorkingChanges = useMemo(() => {
     if (!workingStatus?.isDirty) {

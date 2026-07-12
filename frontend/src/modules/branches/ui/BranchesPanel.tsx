@@ -12,6 +12,7 @@ interface BranchesPanelProps {
   selectedBranchName: string | null;
   onSelectBranch: (branch: Branch) => void;
   embedded?: boolean;
+  refreshToken?: number;
 }
 
 type BranchOrderMode = "alphabetical" | "created-desc" | "created-asc";
@@ -20,7 +21,8 @@ export function BranchesPanel({
   repositoryPath,
   selectedBranchName,
   onSelectBranch,
-  embedded = false
+  embedded = false,
+  refreshToken
 }: BranchesPanelProps) {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export function BranchesPanel({
           currentError instanceof Error ? currentError.message : "Unexpected error."
         );
       });
-  }, [repositoryPath]);
+  }, [repositoryPath, refreshToken]);
 
   const orderedBranches = useMemo(() => {
     return [...branches].sort((left, right) => {

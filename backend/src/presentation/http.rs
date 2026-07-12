@@ -12,6 +12,8 @@ use crate::app::directory_browser::contracts::DirectoryBrowser;
 use crate::app::directory_browser::read_directory_listing::read_directory_listing;
 use crate::app::file_diff::contracts::FileDiffReader;
 use crate::app::file_diff::read_file_diff::read_file_diff;
+use crate::app::repo_signature::contracts::RepoSignatureReader;
+use crate::app::repo_signature::read_repo_signature::read_repo_signature;
 use crate::app::stash::contracts::StashReader;
 use crate::app::stash::read_stash::read_stash;
 use crate::app::status::contracts::StatusReader;
@@ -32,6 +34,7 @@ pub fn serve(
     file_diff_reader: &dyn FileDiffReader,
     stash_reader: &dyn StashReader,
     directory_browser: &dyn DirectoryBrowser,
+    repo_signature_reader: &dyn RepoSignatureReader,
 ) -> Result<(), AppError> {
     let listener = TcpListener::bind("0.0.0.0:7879")
         .map_err(|error| AppError::IoError(error.to_string()))?;
@@ -60,6 +63,7 @@ pub fn serve(
             file_diff_reader,
             stash_reader,
             directory_browser,
+            repo_signature_reader,
         );
 
         stream
@@ -79,6 +83,7 @@ fn route_request(
     file_diff_reader: &dyn FileDiffReader,
     stash_reader: &dyn StashReader,
     directory_browser: &dyn DirectoryBrowser,
+    repo_signature_reader: &dyn RepoSignatureReader,
 ) -> String {
     let Some(first_line) = request.lines().next() else {
         return json_response(400, r#"{"error":"Invalid request."}"#);
@@ -118,6 +123,10 @@ fn route_request(
 
     if target.starts_with("/api/browse-directory") {
         return handle_browse_directory_request(target, directory_browser);
+    }
+
+    if target.starts_with("/api/repo-signature") {
+        return handle_repo_signature_request(target, repo_signature_reader);
     }
 
     json_response(404, r#"{"error":"Not found."}"#)
@@ -226,6 +235,23 @@ fn handle_browse_directory_request(target: &str, directory_browser: &dyn Directo
 
     match read_directory_listing(directory_browser, &path) {
         Ok(listing) => json_response(200, &directory_listing_to_json(&listing)),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_repo_signature_request(
+    target: &str,
+    repo_signature_reader: &dyn RepoSignatureReader,
+) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    match read_repo_signature(repo_signature_reader, &path) {
+        Ok(signature) => json_response(200, &format!(r#"{{"signature":"{}"}}"#, escape_json(&signature))),
         Err(error) => json_response(
             500,
             &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
