@@ -18,6 +18,9 @@ target/
 # Local DB artifacts
 db/*.sqlite
 
+# Per-developer local overrides (e.g. mounting your own projects folder)
+docker-compose.override.yml
+
 # Editor
 .idea/
 .vscode/

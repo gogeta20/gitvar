@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "check": "tsc --noEmit"
+    "check": "tsc -b --noEmit tsconfig.app.json"
   },
   "dependencies": {
     "@fontsource/jetbrains-mono": "^5.2.8",

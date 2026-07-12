@@ -3,6 +3,7 @@ mod domain;
 mod infrastructure;
 mod presentation;
 
+use crate::infrastructure::filesystem::FsDirectoryBrowser;
 use crate::infrastructure::git::GitCliBranchReader;
 use crate::infrastructure::git::GitCliCommitFilesReader;
 use crate::infrastructure::git::GitCliCommitReader;
@@ -19,6 +20,7 @@ fn main() {
     let commit_files_reader = GitCliCommitFilesReader::new();
     let file_diff_reader = GitCliFileDiffReader::new();
     let stash_reader = GitCliStashReader::new();
+    let directory_browser = FsDirectoryBrowser::new();
 
     let command = std::env::args().nth(1);
     let result = match command.as_deref() {
@@ -29,6 +31,7 @@ fn main() {
             &commit_files_reader,
             &file_diff_reader,
             &stash_reader,
+            &directory_browser,
         ),
         _ => run(&branch_reader),
     };
