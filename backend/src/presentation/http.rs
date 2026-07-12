@@ -33,10 +33,10 @@ pub fn serve(
     stash_reader: &dyn StashReader,
     directory_browser: &dyn DirectoryBrowser,
 ) -> Result<(), AppError> {
-    let listener = TcpListener::bind("0.0.0.0:7879")
+    let listener = TcpListener::bind("0.0.0.0:7878")
         .map_err(|error| AppError::IoError(error.to_string()))?;
 
-    println!("GitMap backend listening on http://0.0.0.0:7879");
+    println!("GitMap backend listening on http://0.0.0.0:7878");
 
     for stream in listener.incoming() {
         let mut stream = stream.map_err(|error| AppError::IoError(error.to_string()))?;
