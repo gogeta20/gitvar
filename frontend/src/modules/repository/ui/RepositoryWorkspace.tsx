@@ -15,6 +15,7 @@ import {
   RepositoryWorkspace as RepositoryWorkspaceState
 } from "@modules/repository/domain/repository";
 import { createRepositoryReader } from "@modules/repository/infrastructure/RepositoryReaderProvider";
+import { StashPanel } from "@modules/stash/ui/StashPanel";
 import styles from "./RepositoryWorkspace.module.css";
 
 interface RepositoryWorkspaceProps {
@@ -164,20 +165,7 @@ export function RepositoryWorkspace({
 
               {isStashOpen ? (
                 <div className={styles.sidebarSectionBody}>
-                  <div className={styles.mockList}>
-                    <button className={styles.mockItem} type="button">
-                      <span className={styles.mockItemTitle}>stash@&#123;0&#125;</span>
-                      <span className={styles.mockItemMeta}>WIP graph polish</span>
-                    </button>
-                    <button className={styles.mockItem} type="button">
-                      <span className={styles.mockItemTitle}>stash@&#123;1&#125;</span>
-                      <span className={styles.mockItemMeta}>Explore sidebar toggle</span>
-                    </button>
-                    <button className={styles.mockItem} type="button">
-                      <span className={styles.mockItemTitle}>stash@&#123;2&#125;</span>
-                      <span className={styles.mockItemMeta}>Theme probe mock</span>
-                    </button>
-                  </div>
+                  <StashPanel embedded repositoryPath={selectedRepository.path} />
                 </div>
               ) : null}
             </section>

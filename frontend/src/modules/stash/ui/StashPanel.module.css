@@ -1,0 +1,50 @@
+.stashList {
+  display: grid;
+  gap: 8px;
+}
+
+.stashItem {
+  width: 100%;
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
+  background: var(--color-bg-button);
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+}
+
+.stashItemTopRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.stashItemTitle {
+  color: var(--color-text-accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stashItemDate {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}
+
+.stashItemMessage {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty {
+  color: var(--color-text-secondary);
+}
+
+.error {
+  margin: 0;
+  color: #ff6b81;
+}
