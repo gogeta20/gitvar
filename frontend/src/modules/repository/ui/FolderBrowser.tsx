@@ -48,7 +48,7 @@ export function FolderBrowser({ onOpenRepository }: FolderBrowserProps) {
   }
 
   return (
-    <InfoCard title="Open a folder">
+    <InfoCard fillHeight title="Open a folder">
       <div className={styles.pathRow}>
         <button
           aria-label="Back to the default starting folder"
