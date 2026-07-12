@@ -51,7 +51,8 @@ export function CommitGraphRow({
 
   const rowClassName = [
     isSelected ? styles.commitRowActive : isBranchTarget ? styles.commitRowBranchTarget : styles.commitRow,
-    hasVisibleContent ? null : styles.commitRowCollapsedContent
+    hasVisibleContent ? null : styles.commitRowCollapsedContent,
+    commit.isStash ? styles.commitRowStash : null
   ]
     .filter(Boolean)
     .join(" ");

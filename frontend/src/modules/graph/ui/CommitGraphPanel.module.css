@@ -29,6 +29,10 @@
   grid-template-columns: minmax(180px, 1fr) auto;
 }
 
+.commitRowStash {
+  background: color-mix(in srgb, var(--color-text-accent) 10%, transparent);
+}
+
 .commitRow:hover,
 .commitRowActive:hover {
   background: rgba(255, 255, 255, 0.06);
