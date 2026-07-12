@@ -24,9 +24,9 @@ fn parse_stash_line(line: &str) -> Result<StashEntry, AppError> {
     let parent_hashes = parts
         .next()
         .ok_or_else(|| AppError::ParseError(format!("Missing parent hashes in line: {line}")))?;
-    let relative_date = parts
+    let created_at = parts
         .next()
-        .ok_or_else(|| AppError::ParseError(format!("Missing relative date in line: {line}")))?;
+        .ok_or_else(|| AppError::ParseError(format!("Missing created-at date in line: {line}")))?;
     let message = parts
         .next()
         .ok_or_else(|| AppError::ParseError(format!("Missing message in line: {line}")))?;
@@ -48,7 +48,7 @@ fn parse_stash_line(line: &str) -> Result<StashEntry, AppError> {
         commit_id: commit_id.to_string(),
         short_commit_id: short_commit_id.to_string(),
         base_commit_id: base_commit_id.to_string(),
-        relative_date: relative_date.to_string(),
+        created_at: created_at.to_string(),
         message: message.to_string(),
     })
 }
@@ -60,8 +60,8 @@ mod tests {
     #[test]
     fn parses_stash_entries() {
         let raw = "\
-stash@{0}|abc123|abc123a|parent111 parent222|2 hours ago|WIP on main: abc123a message\n\
-stash@{1}|def456|def456b|parent333|3 days ago|On feature/x: custom message\n";
+stash@{0}|abc123|abc123a|parent111 parent222|2026-07-12T09:15:00+02:00|WIP on main: abc123a message\n\
+stash@{1}|def456|def456b|parent333|2026-06-28T14:03:00+02:00|On feature/x: custom message\n";
 
         let entries = parse_stash_list(raw).expect("stash entries should parse");
 

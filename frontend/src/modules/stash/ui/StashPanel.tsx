@@ -5,12 +5,35 @@ import { StashEntry } from "@modules/stash/domain/stashEntry";
 import { createStashReader } from "@modules/stash/infrastructure/StashReaderProvider";
 import styles from "./StashPanel.module.css";
 
+function formatCreatedAt(input: string): string {
+  const date = new Date(input);
+
+  if (Number.isNaN(date.getTime())) {
+    return input;
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
+}
+
 interface StashPanelProps {
   repositoryPath: string;
+  selectedCommitId?: string | null;
+  onSelectStash?: (entry: StashEntry) => void;
   embedded?: boolean;
 }
 
-export function StashPanel({ repositoryPath, embedded = false }: StashPanelProps) {
+export function StashPanel({
+  repositoryPath,
+  selectedCommitId = null,
+  onSelectStash,
+  embedded = false
+}: StashPanelProps) {
   const [entries, setEntries] = useState<StashEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,13 +59,24 @@ export function StashPanel({ repositoryPath, embedded = false }: StashPanelProps
       {!error && entries.length > 0 ? (
         <div className={styles.stashList}>
           {entries.map((entry) => (
-            <div className={styles.stashItem} key={entry.reference}>
-              <div className={styles.stashItemTopRow}>
-                <span className={styles.stashItemTitle}>{entry.reference}</span>
-                <span className={styles.stashItemDate}>{entry.relativeDate}</span>
-              </div>
-              <span className={styles.stashItemMessage}>{entry.message}</span>
-            </div>
+            <button
+              className={
+                entry.commitId === selectedCommitId
+                  ? styles.stashItemSelected
+                  : styles.stashItem
+              }
+              key={entry.reference}
+              onClick={() => onSelectStash?.(entry)}
+              type="button"
+            >
+              <span className={styles.stashItemIndex}>#{entry.index}</span>
+              <span
+                className={styles.stashItemMessage}
+                title={`${entry.reference} · ${formatCreatedAt(entry.createdAt)}`}
+              >
+                {entry.message}
+              </span>
+            </button>
           ))}
         </div>
       ) : null}

@@ -17,7 +17,7 @@ impl GitCliStashReader {
 impl StashReader for GitCliStashReader {
     fn read_stash(&self, repository_path: &Path) -> Result<Vec<StashEntry>, AppError> {
         let output = Command::new("git")
-            .args(["stash", "list", "--format=%gd|%H|%h|%P|%cr|%s"])
+            .args(["stash", "list", "--format=%gd|%H|%h|%P|%cI|%s"])
             .current_dir(repository_path)
             .output()
             .map_err(|error| AppError::IoError(error.to_string()))?;

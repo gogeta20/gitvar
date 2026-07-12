@@ -5,6 +5,6 @@ pub struct StashEntry {
     pub commit_id: String,
     pub short_commit_id: String,
     pub base_commit_id: String,
-    pub relative_date: String,
+    pub created_at: String,
     pub message: String,
 }

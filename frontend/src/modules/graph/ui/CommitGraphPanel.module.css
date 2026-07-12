@@ -33,13 +33,18 @@
   background: color-mix(in srgb, var(--color-text-accent) 10%, transparent);
 }
 
-.commitRow:hover,
-.commitRowActive:hover {
+.commitRow:hover {
   background: rgba(255, 255, 255, 0.06);
 }
 
 .commitRowActive {
-  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--color-text-accent);
+  background: color-mix(in srgb, var(--color-text-accent) 14%, transparent);
+  padding: 0 0;
+}
+
+.commitRowActive:hover {
+  background: color-mix(in srgb, var(--color-text-accent) 20%, transparent);
 }
 
 .commitRowBranchTarget {

@@ -346,7 +346,7 @@ fn stash_entries_to_json(entries: &[StashEntry]) -> String {
                     r#""commitId":"{}","#,
                     r#""shortCommitId":"{}","#,
                     r#""baseCommitId":"{}","#,
-                    r#""relativeDate":"{}","#,
+                    r#""createdAt":"{}","#,
                     r#""message":"{}""#,
                     "}}"
                 ),
@@ -355,7 +355,7 @@ fn stash_entries_to_json(entries: &[StashEntry]) -> String {
                 escape_json(&entry.commit_id),
                 escape_json(&entry.short_commit_id),
                 escape_json(&entry.base_commit_id),
-                escape_json(&entry.relative_date),
+                escape_json(&entry.created_at),
                 escape_json(&entry.message),
             )
         })
