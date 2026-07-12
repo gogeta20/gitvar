@@ -14,7 +14,7 @@ interface BranchesPanelProps {
   embedded?: boolean;
 }
 
-type BranchOrderMode = "alphabetical" | "created";
+type BranchOrderMode = "alphabetical" | "created-desc" | "created-asc";
 
 export function BranchesPanel({
   repositoryPath,
@@ -46,24 +46,22 @@ export function BranchesPanel({
 
   const orderedBranches = useMemo(() => {
     return [...branches].sort((left, right) => {
-      if (left.isCurrent && !right.isCurrent) {
-        return -1;
-      }
-
-      if (!left.isCurrent && right.isCurrent) {
-        return 1;
-      }
-
       if (left.isRemote !== right.isRemote) {
         return left.isRemote ? 1 : -1;
       }
 
-      if (orderMode === "created" && !left.isRemote && !right.isRemote) {
+      if (
+        (orderMode === "created-desc" || orderMode === "created-asc") &&
+        !left.isRemote &&
+        !right.isRemote
+      ) {
         const leftTimestamp = left.createdAt ? Date.parse(left.createdAt) : 0;
         const rightTimestamp = right.createdAt ? Date.parse(right.createdAt) : 0;
 
         if (leftTimestamp !== rightTimestamp) {
-          return rightTimestamp - leftTimestamp;
+          return orderMode === "created-desc"
+            ? rightTimestamp - leftTimestamp
+            : leftTimestamp - rightTimestamp;
         }
       }
 
@@ -92,14 +90,25 @@ export function BranchesPanel({
           </button>
           <button
             className={
-              orderMode === "created"
+              orderMode === "created-desc"
                 ? styles.branchOrderButtonActive
                 : styles.branchOrderButton
             }
-            onClick={() => setOrderMode("created")}
+            onClick={() => setOrderMode("created-desc")}
             type="button"
           >
-            Created
+            Newest
+          </button>
+          <button
+            className={
+              orderMode === "created-asc"
+                ? styles.branchOrderButtonActive
+                : styles.branchOrderButton
+            }
+            onClick={() => setOrderMode("created-asc")}
+            type="button"
+          >
+            Oldest
           </button>
         </div>
       </div>
