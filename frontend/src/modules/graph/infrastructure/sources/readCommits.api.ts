@@ -1,7 +1,8 @@
+import { API_BASE_URL } from "@core/config/api";
 import { Commit } from "@modules/graph/domain/commit";
 import { parseCommitsDto } from "@modules/graph/infrastructure/parsers/parseCommitsDto";
 
-const COMMITS_API_URL = "http://127.0.0.1:7879/api/commits";
+const COMMITS_API_URL = `${API_BASE_URL}/api/commits`;
 
 export async function readCommitsFromApi(
   repositoryPath: string

@@ -3,5 +3,6 @@ export interface Branch {
   fullRef: string;
   isRemote: boolean;
   isCurrent: boolean;
+  createdAt: string | null;
   targetCommit: string;
 }
