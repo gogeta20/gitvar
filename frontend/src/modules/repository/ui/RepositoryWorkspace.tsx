@@ -197,6 +197,7 @@ export function RepositoryWorkspace({ repository: selectedRepository }: Reposito
             commit={selectedCommit}
             onSelectFile={setSelectedFilePath}
             onViewChanges={handleViewChanges}
+            refreshToken={refreshToken}
             repositoryPath={selectedRepository.path}
             selectedFilePath={selectedFilePath}
           />

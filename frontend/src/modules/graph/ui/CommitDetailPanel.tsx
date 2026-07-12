@@ -41,6 +41,7 @@ interface CommitDetailPanelProps {
   selectedFilePath: string | null;
   onSelectFile: (filePath: string) => void;
   onViewChanges: () => void;
+  refreshToken?: number;
 }
 
 type StatusFilterKey = "modified" | "added" | "deleted";
@@ -74,7 +75,8 @@ export function CommitDetailPanel({
   repositoryPath,
   selectedFilePath,
   onSelectFile,
-  onViewChanges
+  onViewChanges,
+  refreshToken
 }: CommitDetailPanelProps) {
   const [viewMode, setViewMode] = usePersistedState<"tree" | "path">(
     "gitmap.commitDetail.viewMode",
@@ -102,9 +104,16 @@ export function CommitDetailPanel({
   useEffect(() => {
     const statusReader = createStatusReader();
 
-    readStatus(statusReader, repositoryPath)
-      .then(setWorkingStatus)
-      .catch(() => setWorkingStatus(null));
+    function fetchWorkingStatus() {
+      readStatus(statusReader, repositoryPath)
+        .then(setWorkingStatus)
+        .catch(() => setWorkingStatus(null));
+    }
+
+    fetchWorkingStatus();
+    const intervalId = window.setInterval(fetchWorkingStatus, 2000);
+
+    return () => window.clearInterval(intervalId);
   }, [repositoryPath]);
 
   useEffect(() => {
@@ -125,7 +134,7 @@ export function CommitDetailPanel({
           currentError instanceof Error ? currentError.message : "Unexpected error."
         );
       });
-  }, [commit, repositoryPath]);
+  }, [commit, repositoryPath, refreshToken]);
 
   useEffect(() => {
     if (!selectedFilePath) {
