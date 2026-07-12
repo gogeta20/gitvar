@@ -5,6 +5,7 @@ interface BranchDto {
   fullRef: string;
   isRemote: boolean;
   isCurrent: boolean;
+  createdAt: string;
   targetCommit: string;
 }
 
@@ -18,6 +19,7 @@ export function parseBranchesDto(input: BranchResponseDto): Branch[] {
     fullRef: branch.fullRef,
     isRemote: branch.isRemote,
     isCurrent: branch.isCurrent,
+    createdAt: branch.createdAt || null,
     targetCommit: branch.targetCommit
   }));
 }
