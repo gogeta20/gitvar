@@ -3,10 +3,11 @@ import { InfoCard } from "@core/components/InfoCard";
 import { loadRepositoryWorkspace } from "@modules/repository/application/use-cases/loadRepositoryWorkspace";
 import { RepositorySummary } from "@modules/repository/domain/repository";
 import { createRepositoryReader } from "@modules/repository/infrastructure/RepositoryReaderProvider";
+import { FolderBrowser } from "@modules/repository/ui/FolderBrowser";
 import styles from "./RepositoryPicker.module.css";
 
 interface RepositoryPickerProps {
-  onOpenRepository: (repositoryId: string) => void;
+  onOpenRepository: (repository: RepositorySummary) => void;
 }
 
 export function RepositoryPicker({ onOpenRepository }: RepositoryPickerProps) {
@@ -44,13 +45,15 @@ export function RepositoryPicker({ onOpenRepository }: RepositoryPickerProps) {
         </p>
       </section>
 
+      <FolderBrowser onOpenRepository={onOpenRepository} />
+
       <InfoCard title="Recent repositories">
         <div className={styles.list}>
           {repositories.map((repository) => (
             <button
               key={repository.id}
               className={styles.card}
-              onClick={() => onOpenRepository(repository.id)}
+              onClick={() => onOpenRepository(repository)}
               type="button"
             >
               <div className={styles.topline}>
@@ -71,4 +74,3 @@ export function RepositoryPicker({ onOpenRepository }: RepositoryPickerProps) {
     </div>
   );
 }
-

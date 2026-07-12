@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ShellLayout } from "@core/layouts/ShellLayout";
 import { HomePage } from "@pages/HomePage";
 import { RepositoryWorkspacePage } from "@pages/RepositoryWorkspacePage";
+import { RepositorySummary } from "@modules/repository/domain/repository";
 import { WorkspaceTabsBar } from "@modules/repository/ui/WorkspaceTabsBar";
 
 export function App() {
@@ -9,33 +10,35 @@ export function App() {
     document.documentElement.setAttribute("data-theme", "dracula");
   }, []);
 
-  const [openRepositoryIds, setOpenRepositoryIds] = useState<string[]>([]);
+  const [openRepositories, setOpenRepositories] = useState<RepositorySummary[]>([]);
   const [activeRepositoryId, setActiveRepositoryId] = useState<string | null>(null);
 
-  function handleOpenRepository(repositoryId: string) {
-    setOpenRepositoryIds((current) =>
-      current.includes(repositoryId) ? current : [...current, repositoryId]
+  function handleOpenRepository(repository: RepositorySummary) {
+    setOpenRepositories((current) =>
+      current.some((item) => item.id === repository.id) ? current : [...current, repository]
     );
-    setActiveRepositoryId(repositoryId);
+    setActiveRepositoryId(repository.id);
   }
 
   function handleCloseTab(repositoryId: string) {
-    setOpenRepositoryIds((current) => current.filter((id) => id !== repositoryId));
+    setOpenRepositories((current) => current.filter((item) => item.id !== repositoryId));
     setActiveRepositoryId((current) => (current === repositoryId ? null : current));
   }
 
+  const activeRepository = openRepositories.find((item) => item.id === activeRepositoryId) ?? null;
+
   return (
-    <ShellLayout title={activeRepositoryId ? "Repository workspace" : "Choose a repository"}>
+    <ShellLayout title={activeRepository ? "Repository workspace" : "Choose a repository"}>
       <WorkspaceTabsBar
         activeRepositoryId={activeRepositoryId}
         onAddTab={() => setActiveRepositoryId(null)}
         onCloseTab={handleCloseTab}
         onSelectTab={setActiveRepositoryId}
-        openRepositoryIds={openRepositoryIds}
+        openRepositories={openRepositories}
       />
 
-      {activeRepositoryId ? (
-        <RepositoryWorkspacePage selectedRepositoryId={activeRepositoryId} />
+      {activeRepository ? (
+        <RepositoryWorkspacePage repository={activeRepository} />
       ) : (
         <HomePage onOpenRepository={handleOpenRepository} />
       )}
