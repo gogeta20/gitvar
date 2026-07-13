@@ -26,13 +26,15 @@ interface StashPanelProps {
   selectedCommitId?: string | null;
   onSelectStash?: (entry: StashEntry) => void;
   embedded?: boolean;
+  refreshToken?: number;
 }
 
 export function StashPanel({
   repositoryPath,
   selectedCommitId = null,
   onSelectStash,
-  embedded = false
+  embedded = false,
+  refreshToken
 }: StashPanelProps) {
   const [entries, setEntries] = useState<StashEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +52,7 @@ export function StashPanel({
           currentError instanceof Error ? currentError.message : "Unexpected error."
         );
       });
-  }, [repositoryPath]);
+  }, [repositoryPath, refreshToken]);
 
   const content = (
     <>

@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ArrowUpDown,
+  Check,
   ChevronDown,
   ChevronRight,
   FolderTree,
@@ -10,19 +11,24 @@ import {
   Plus,
   RotateCcw,
   Search,
-  Trash2
+  Trash2,
+  Undo2
 } from "lucide-react";
 import { CopyableHash } from "@core/components/CopyableHash";
 import { InfoCard } from "@core/components/InfoCard";
 import { Tooltip } from "@core/components/Tooltip";
 import { usePersistedState } from "@core/hooks/usePersistedState";
+import { discardFile } from "@modules/graph/application/use-cases/discardFile";
 import { readCommitFiles } from "@modules/graph/application/use-cases/readCommitFiles";
 import { readStatus } from "@modules/graph/application/use-cases/readStatus";
+import { stageFile } from "@modules/graph/application/use-cases/stageFile";
+import { unstageFile } from "@modules/graph/application/use-cases/unstageFile";
 import { GraphCommit } from "@modules/graph/domain/commit";
 import { FileChange } from "@modules/graph/domain/fileChange";
 import { WorkingStatus } from "@modules/graph/domain/workingStatus";
 import { createCommitFilesReader } from "@modules/graph/infrastructure/CommitFilesReaderProvider";
 import { createStatusReader } from "@modules/graph/infrastructure/StatusReaderProvider";
+import { createWorkingChangesWriter } from "@modules/graph/infrastructure/WorkingChangesWriterProvider";
 import { ancestorFolderPaths, buildFileTree, collectFolderPaths } from "@modules/graph/lib/buildFileTree";
 import { changeTypeLetter } from "@modules/graph/lib/changeTypeLetter";
 import { countByChangeType } from "@modules/graph/lib/countByChangeType";
@@ -41,6 +47,7 @@ interface CommitDetailPanelProps {
   selectedFilePath: string | null;
   onSelectFile: (filePath: string) => void;
   onViewChanges: () => void;
+  refreshToken?: number;
 }
 
 type StatusFilterKey = "modified" | "added" | "deleted";
@@ -74,7 +81,8 @@ export function CommitDetailPanel({
   repositoryPath,
   selectedFilePath,
   onSelectFile,
-  onViewChanges
+  onViewChanges,
+  refreshToken
 }: CommitDetailPanelProps) {
   const [viewMode, setViewMode] = usePersistedState<"tree" | "path">(
     "gitmap.commitDetail.viewMode",
@@ -99,13 +107,52 @@ export function CommitDetailPanel({
   const [commitFiles, setCommitFiles] = useState<FileChange[]>([]);
   const [filesError, setFilesError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const refreshWorkingStatus = useCallback(() => {
     const statusReader = createStatusReader();
 
-    readStatus(statusReader, repositoryPath)
+    return readStatus(statusReader, repositoryPath)
       .then(setWorkingStatus)
       .catch(() => setWorkingStatus(null));
   }, [repositoryPath]);
+
+  useEffect(() => {
+    refreshWorkingStatus();
+    const intervalId = window.setInterval(refreshWorkingStatus, 2000);
+
+    return () => window.clearInterval(intervalId);
+  }, [refreshWorkingStatus]);
+
+  function handleActionError(currentError: unknown) {
+    setFilesError(currentError instanceof Error ? currentError.message : "Unexpected error.");
+  }
+
+  function handleStageFile(filePath: string) {
+    const workingChangesWriter = createWorkingChangesWriter();
+
+    stageFile(workingChangesWriter, repositoryPath, filePath)
+      .then(refreshWorkingStatus)
+      .catch(handleActionError);
+  }
+
+  function handleUnstageFile(filePath: string) {
+    const workingChangesWriter = createWorkingChangesWriter();
+
+    unstageFile(workingChangesWriter, repositoryPath, filePath)
+      .then(refreshWorkingStatus)
+      .catch(handleActionError);
+  }
+
+  function handleDiscardFile(filePath: string) {
+    if (!window.confirm(`Discard changes to "${filePath}"? This cannot be undone.`)) {
+      return;
+    }
+
+    const workingChangesWriter = createWorkingChangesWriter();
+
+    discardFile(workingChangesWriter, repositoryPath, filePath)
+      .then(refreshWorkingStatus)
+      .catch(handleActionError);
+  }
 
   useEffect(() => {
     if (!commit || commit.isWorkingChanges) {
@@ -125,7 +172,7 @@ export function CommitDetailPanel({
           currentError instanceof Error ? currentError.message : "Unexpected error."
         );
       });
-  }, [commit, repositoryPath]);
+  }, [commit, repositoryPath, refreshToken]);
 
   useEffect(() => {
     if (!selectedFilePath) {
@@ -197,27 +244,71 @@ export function CommitDetailPanel({
     ? sortedFiles.filter((file) => file.path.toLowerCase().includes(trimmedQuery))
     : [];
 
+  const showStagingActions = commit.isWorkingChanges;
+  const stagedFiles = filesForList.filter((file) => file.isStaged);
+  const unstagedFiles = filesForList.filter((file) => !file.isStaged);
+  const stagedTree = buildFileTree(stagedFiles, compareFiles);
+  const unstagedTree = buildFileTree(unstagedFiles, compareFiles);
+
   function renderFileRow(file: FileChange) {
     return (
-      <button
-        className={file.path === selectedFilePath ? styles.fileListItemActive : styles.fileListItem}
-        key={file.path}
-        onClick={() => onSelectFile(file.path)}
-        type="button"
-      >
-        <span
-          className={
-            colorizeFileNames
-              ? `${styles.fileListItemName} ${styles[`statusBadge-${file.changeType}`]}`
-              : styles.fileListItemName
-          }
+      <div className={styles.fileListItemRow} key={file.path}>
+        <button
+          className={file.path === selectedFilePath ? styles.fileListItemActive : styles.fileListItem}
+          onClick={() => onSelectFile(file.path)}
+          type="button"
         >
-          {file.path}
-        </span>
-        <span className={`${styles.statusBadge} ${styles[`statusBadge-${file.changeType}`]}`}>
-          {changeTypeLetter(file.changeType)}
-        </span>
-      </button>
+          <span
+            className={
+              colorizeFileNames
+                ? `${styles.fileListItemName} ${styles[`statusBadge-${file.changeType}`]}`
+                : styles.fileListItemName
+            }
+          >
+            {file.path}
+          </span>
+          <span className={`${styles.statusBadge} ${styles[`statusBadge-${file.changeType}`]}`}>
+            {changeTypeLetter(file.changeType)}
+          </span>
+        </button>
+
+        {showStagingActions ? (
+          <div className={styles.fileActions}>
+            {file.isStaged ? (
+              <button
+                aria-label="Unstage file"
+                className={`${styles.fileActionButton} ${styles.fileActionButtonUnstage}`}
+                onClick={() => handleUnstageFile(file.path)}
+                title="Unstage"
+                type="button"
+              >
+                <Undo2 size={12} />
+              </button>
+            ) : (
+              <>
+                <button
+                  aria-label="Stage file"
+                  className={`${styles.fileActionButton} ${styles.fileActionButtonStage}`}
+                  onClick={() => handleStageFile(file.path)}
+                  title="Stage"
+                  type="button"
+                >
+                  <Check size={12} />
+                </button>
+                <button
+                  aria-label="Discard changes"
+                  className={`${styles.fileActionButton} ${styles.fileActionButtonDiscard}`}
+                  onClick={() => handleDiscardFile(file.path)}
+                  title="Discard"
+                  type="button"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </>
+            )}
+          </div>
+        ) : null}
+      </div>
     );
   }
 
@@ -414,21 +505,60 @@ export function CommitDetailPanel({
       ) : null}
 
       <div className={styles.fileTreeScroll}>
-        {trimmedQuery
-          ? filteredFiles.map(renderFileRow)
-          : viewMode === "tree"
-            ? (
-                <FileTreeView
-                  colorizeFileNames={colorizeFileNames}
-                  depth={0}
-                  entries={fileTree}
-                  expandedPaths={expandedPaths}
-                  onSelectFile={onSelectFile}
-                  onToggleFolder={toggleExpanded}
-                  selectedFilePath={selectedFilePath}
-                />
-              )
-            : sortedFiles.map(renderFileRow)}
+        {trimmedQuery ? (
+          filteredFiles.map(renderFileRow)
+        ) : showStagingActions ? (
+          <>
+            <div className={styles.fileSectionHeader}>Staged changes ({stagedFiles.length})</div>
+            {stagedFiles.length === 0 ? (
+              <p className={styles.fileSectionEmpty}>Nothing staged yet.</p>
+            ) : viewMode === "tree" ? (
+              <FileTreeView
+                colorizeFileNames={colorizeFileNames}
+                depth={0}
+                entries={stagedTree}
+                expandedPaths={expandedPaths}
+                onSelectFile={onSelectFile}
+                onToggleFolder={toggleExpanded}
+                onUnstageFile={handleUnstageFile}
+                selectedFilePath={selectedFilePath}
+              />
+            ) : (
+              stagedFiles.sort(compareFiles).map(renderFileRow)
+            )}
+
+            <div className={styles.fileSectionHeader}>Changes ({unstagedFiles.length})</div>
+            {unstagedFiles.length === 0 ? (
+              <p className={styles.fileSectionEmpty}>No unstaged changes.</p>
+            ) : viewMode === "tree" ? (
+              <FileTreeView
+                colorizeFileNames={colorizeFileNames}
+                depth={0}
+                entries={unstagedTree}
+                expandedPaths={expandedPaths}
+                onDiscardFile={handleDiscardFile}
+                onSelectFile={onSelectFile}
+                onStageFile={handleStageFile}
+                onToggleFolder={toggleExpanded}
+                selectedFilePath={selectedFilePath}
+              />
+            ) : (
+              unstagedFiles.sort(compareFiles).map(renderFileRow)
+            )}
+          </>
+        ) : viewMode === "tree" ? (
+          <FileTreeView
+            colorizeFileNames={colorizeFileNames}
+            depth={0}
+            entries={fileTree}
+            expandedPaths={expandedPaths}
+            onSelectFile={onSelectFile}
+            onToggleFolder={toggleExpanded}
+            selectedFilePath={selectedFilePath}
+          />
+        ) : (
+          sortedFiles.map(renderFileRow)
+        )}
       </div>
     </InfoCard>
   );

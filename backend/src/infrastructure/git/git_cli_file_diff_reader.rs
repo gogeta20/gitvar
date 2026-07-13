@@ -21,9 +21,10 @@ impl FileDiffReader for GitCliFileDiffReader {
         repository_path: &Path,
         commit_id: &str,
         file_path: &str,
+        staged: bool,
     ) -> Result<String, AppError> {
         if commit_id == WORKING_CHANGES_COMMIT_ID {
-            return read_working_directory_diff(repository_path, file_path);
+            return read_working_directory_diff(repository_path, file_path, staged);
         }
 
         let parents = read_commit_parents(repository_path, commit_id)?;
@@ -52,15 +53,26 @@ impl FileDiffReader for GitCliFileDiffReader {
     }
 }
 
-fn read_working_directory_diff(repository_path: &Path, file_path: &str) -> Result<String, AppError> {
+fn read_working_directory_diff(
+    repository_path: &Path,
+    file_path: &str,
+    staged: bool,
+) -> Result<String, AppError> {
     let is_untracked = is_untracked_file(repository_path, file_path)?;
 
     if is_untracked {
         return read_untracked_file_as_diff(repository_path, file_path);
     }
 
+    let mut args = vec!["diff", "--no-color"];
+    if staged {
+        args.push("--cached");
+    }
+    args.push("--");
+    args.push(file_path);
+
     let output = Command::new("git")
-        .args(["diff", "--no-color", "HEAD", "--", file_path])
+        .args(args)
         .current_dir(repository_path)
         .output()
         .map_err(|error| AppError::IoError(error.to_string()))?;

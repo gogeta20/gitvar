@@ -10,6 +10,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ResizeHandle } from "@core/components/ResizeHandle";
 import { useResizableWidth } from "@core/hooks/useResizableWidth";
 import { RepositorySummary } from "@modules/repository/domain/repository";
+import { useRepoLiveRefresh } from "@modules/repository/application/use-cases/useRepoLiveRefresh";
 import { StashEntry } from "@modules/stash/domain/stashEntry";
 import { StashPanel } from "@modules/stash/ui/StashPanel";
 import styles from "./RepositoryWorkspace.module.css";
@@ -19,6 +20,7 @@ interface RepositoryWorkspaceProps {
 }
 
 export function RepositoryWorkspace({ repository: selectedRepository }: RepositoryWorkspaceProps) {
+  const refreshToken = useRepoLiveRefresh(selectedRepository.path);
   const [graphCommits, setGraphCommits] = useState<GraphCommit[]>([]);
   const [selectedCommitId, setSelectedCommitId] = useState<string | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
@@ -106,6 +108,7 @@ export function RepositoryWorkspace({ repository: selectedRepository }: Reposito
                   <BranchesPanel
                     embedded
                     onSelectBranch={handleSelectBranch}
+                    refreshToken={refreshToken}
                     repositoryPath={selectedRepository.path}
                     selectedBranchName={selectedBranch?.name ?? null}
                   />
@@ -132,6 +135,7 @@ export function RepositoryWorkspace({ repository: selectedRepository }: Reposito
                   <StashPanel
                     embedded
                     onSelectStash={handleSelectStash}
+                    refreshToken={refreshToken}
                     repositoryPath={selectedRepository.path}
                     selectedCommitId={selectedCommitId}
                   />
@@ -170,6 +174,7 @@ export function RepositoryWorkspace({ repository: selectedRepository }: Reposito
             onSelectCommit={setSelectedCommitId}
             onToggleDetail={() => setIsDetailOpen((current) => !current)}
             onToggleSidebar={() => setIsSidebarOpen((current) => !current)}
+            refreshToken={refreshToken}
             repositoryPath={selectedRepository.path}
             selectedBranchName={selectedBranch?.name ?? null}
             selectedBranchTargetCommit={selectedBranch?.targetCommit ?? null}
@@ -192,6 +197,7 @@ export function RepositoryWorkspace({ repository: selectedRepository }: Reposito
             commit={selectedCommit}
             onSelectFile={setSelectedFilePath}
             onViewChanges={handleViewChanges}
+            refreshToken={refreshToken}
             repositoryPath={selectedRepository.path}
             selectedFilePath={selectedFilePath}
           />

@@ -379,6 +379,77 @@
   font-weight: 600;
 }
 
+.fileListItemRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.fileListItemRow .fileListItem,
+.fileListItemRow .fileListItemActive {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.fileActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.fileActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.fileActionButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.fileActionButtonStage:hover {
+  color: #2ecc71;
+  background: rgba(46, 204, 113, 0.15);
+}
+
+.fileActionButtonDiscard:hover {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.15);
+}
+
+.fileActionButtonUnstage:hover {
+  color: #f5b942;
+  background: rgba(245, 185, 66, 0.15);
+}
+
+.fileSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.fileSectionEmpty {
+  padding: 4px 6px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
 .fileListItemName {
   overflow: hidden;
   text-overflow: ellipsis;

@@ -43,18 +43,150 @@
   font-size: 12px;
 }
 
+.hunkSectionHeader {
+  padding: 4px 2px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.hunkSectionHeader + .hunkList,
+.hunkSectionHeader + .empty {
+  margin-bottom: var(--space-4);
+}
+
 .hunk {
   border: 1px solid var(--color-border-default);
   border-radius: 10px;
   overflow: hidden;
+  transition: border-color 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
+}
+
+.hunkStagedCollapsed {
+  opacity: 0.75;
+}
+
+.hunkStagedCollapsed:hover {
+  opacity: 1;
+}
+
+.hunkStagedExpanded {
+  border-color: #4c8dff;
+  box-shadow: 0 0 0 1px #4c8dff, 0 6px 18px rgba(76, 141, 255, 0.28);
 }
 
 .hunkHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
   padding: 4px var(--space-3);
   color: var(--color-text-accent);
   background: color-mix(in srgb, var(--color-text-accent) 12%, var(--color-bg-elevated));
   border-bottom: 1px solid var(--color-border-default);
   font-size: 11px;
+}
+
+.hunkStagedCollapsed .hunkHeader {
+  border-bottom: 0;
+}
+
+.hunkHeaderLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hunkCollapseToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.hunkStagedTag {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #4c8dff;
+  background: rgba(76, 141, 255, 0.15);
+  border: 1px solid rgba(76, 141, 255, 0.4);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.hunkActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.hunkActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 22px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hunkActionButtonStage {
+  min-width: 60px;
+  padding: 0 10px;
+  border-color: rgba(46, 204, 113, 0.4);
+  background: rgba(46, 204, 113, 0.14);
+  color: #2ecc71;
+}
+
+.hunkActionButtonStage:hover {
+  background: rgba(46, 204, 113, 0.26);
+  border-color: rgba(46, 204, 113, 0.7);
+}
+
+.hunkActionButtonDiscard {
+  width: 20px;
+  padding: 0;
+  margin-left: 2px;
+  border-color: rgba(255, 107, 107, 0.3);
+  color: #ff6b6b;
+}
+
+.hunkActionButtonDiscard:hover {
+  background: rgba(255, 107, 107, 0.2);
+  border-color: rgba(255, 107, 107, 0.6);
+}
+
+.hunkActionButtonUnstage {
+  width: 20px;
+  padding: 0;
+}
+
+.hunkActionButtonUnstage:hover {
+  color: #f5b942;
+  background: rgba(245, 185, 66, 0.15);
+  border-color: rgba(245, 185, 66, 0.4);
 }
 
 .hunkLine {

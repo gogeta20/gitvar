@@ -35,6 +35,7 @@ interface CommitGraphPanelProps {
   onToggleDetail: () => void;
   onSelectCommit: (commitId: string) => void;
   onCommitsLoaded?: (commits: GraphCommit[]) => void;
+  refreshToken?: number;
 }
 
 export function CommitGraphPanel({
@@ -47,7 +48,8 @@ export function CommitGraphPanel({
   onToggleSidebar,
   onToggleDetail,
   onSelectCommit,
-  onCommitsLoaded
+  onCommitsLoaded,
+  refreshToken
 }: CommitGraphPanelProps) {
   const [commits, setCommits] = useState<Commit[]>([]);
   const [workingStatus, setWorkingStatus] = useState<WorkingStatus | null>(null);
@@ -63,29 +65,40 @@ export function CommitGraphPanel({
 
   useEffect(() => {
     const commitReader = createCommitReader();
-    const statusReader = createStatusReader();
     const stashReader = createStashReader();
 
     setError(null);
 
     Promise.all([
       readCommits(commitReader, repositoryPath),
-      readStatus(statusReader, repositoryPath),
       readStash(stashReader, repositoryPath)
     ])
-      .then(([nextCommits, nextStatus, nextStashEntries]) => {
+      .then(([nextCommits, nextStashEntries]) => {
         setCommits(nextCommits);
-        setWorkingStatus(nextStatus);
         setStashEntries(nextStashEntries);
       })
       .catch((currentError: unknown) => {
         setCommits([]);
-        setWorkingStatus(null);
         setStashEntries([]);
         setError(
           currentError instanceof Error ? currentError.message : "Unexpected error."
         );
       });
+  }, [repositoryPath, refreshToken]);
+
+  useEffect(() => {
+    const statusReader = createStatusReader();
+
+    function fetchWorkingStatus() {
+      readStatus(statusReader, repositoryPath)
+        .then(setWorkingStatus)
+        .catch(() => setWorkingStatus(null));
+    }
+
+    fetchWorkingStatus();
+    const intervalId = window.setInterval(fetchWorkingStatus, 2000);
+
+    return () => window.clearInterval(intervalId);
   }, [repositoryPath]);
 
   const commitsWithWorkingChanges = useMemo(() => {

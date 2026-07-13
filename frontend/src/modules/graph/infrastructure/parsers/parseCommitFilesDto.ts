@@ -12,6 +12,7 @@ interface CommitFilesResponseDto {
 export function parseCommitFilesDto(input: CommitFilesResponseDto): FileChange[] {
   return input.files.map((file) => ({
     path: file.path,
-    changeType: file.changeType
+    changeType: file.changeType,
+    isStaged: false
   }));
 }

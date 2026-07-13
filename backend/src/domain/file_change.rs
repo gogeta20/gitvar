@@ -11,4 +11,5 @@ pub enum FileChangeType {
 pub struct FileChange {
     pub path: String,
     pub change_type: FileChangeType,
+    pub is_staged: bool,
 }

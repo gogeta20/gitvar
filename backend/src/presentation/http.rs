@@ -12,10 +12,19 @@ use crate::app::directory_browser::contracts::DirectoryBrowser;
 use crate::app::directory_browser::read_directory_listing::read_directory_listing;
 use crate::app::file_diff::contracts::FileDiffReader;
 use crate::app::file_diff::read_file_diff::read_file_diff;
+use crate::app::repo_signature::contracts::RepoSignatureReader;
+use crate::app::repo_signature::read_repo_signature::read_repo_signature;
 use crate::app::stash::contracts::StashReader;
 use crate::app::stash::read_stash::read_stash;
 use crate::app::status::contracts::StatusReader;
 use crate::app::status::read_status::read_status;
+use crate::app::working_changes::contracts::WorkingChangesWriter;
+use crate::app::working_changes::discard_file::discard_file;
+use crate::app::working_changes::discard_hunk::discard_hunk;
+use crate::app::working_changes::stage_file::stage_file;
+use crate::app::working_changes::stage_hunk::stage_hunk;
+use crate::app::working_changes::unstage_file::unstage_file;
+use crate::app::working_changes::unstage_hunk::unstage_hunk;
 use crate::domain::branch::Branch;
 use crate::domain::commit::Commit;
 use crate::domain::directory_entry::{DirectoryEntry, DirectoryListing};
@@ -32,6 +41,8 @@ pub fn serve(
     file_diff_reader: &dyn FileDiffReader,
     stash_reader: &dyn StashReader,
     directory_browser: &dyn DirectoryBrowser,
+    repo_signature_reader: &dyn RepoSignatureReader,
+    working_changes_writer: &dyn WorkingChangesWriter,
 ) -> Result<(), AppError> {
     let listener = TcpListener::bind("0.0.0.0:7879")
         .map_err(|error| AppError::IoError(error.to_string()))?;
@@ -40,7 +51,7 @@ pub fn serve(
 
     for stream in listener.incoming() {
         let mut stream = stream.map_err(|error| AppError::IoError(error.to_string()))?;
-        let mut buffer = [0_u8; 4096];
+        let mut buffer = [0_u8; 262_144];
 
         let bytes_read = stream
             .read(&mut buffer)
@@ -60,6 +71,8 @@ pub fn serve(
             file_diff_reader,
             stash_reader,
             directory_browser,
+            repo_signature_reader,
+            working_changes_writer,
         );
 
         stream
@@ -79,6 +92,8 @@ fn route_request(
     file_diff_reader: &dyn FileDiffReader,
     stash_reader: &dyn StashReader,
     directory_browser: &dyn DirectoryBrowser,
+    repo_signature_reader: &dyn RepoSignatureReader,
+    working_changes_writer: &dyn WorkingChangesWriter,
 ) -> String {
     let Some(first_line) = request.lines().next() else {
         return json_response(400, r#"{"error":"Invalid request."}"#);
@@ -87,6 +102,48 @@ fn route_request(
     let mut parts = first_line.split_whitespace();
     let method = parts.next().unwrap_or_default();
     let target = parts.next().unwrap_or_default();
+
+    if target.starts_with("/api/stage-file") {
+        if method != "POST" {
+            return json_response(405, r#"{"error":"Method not allowed."}"#);
+        }
+        return handle_stage_file_request(target, working_changes_writer);
+    }
+
+    if target.starts_with("/api/unstage-file") {
+        if method != "POST" {
+            return json_response(405, r#"{"error":"Method not allowed."}"#);
+        }
+        return handle_unstage_file_request(target, working_changes_writer);
+    }
+
+    if target.starts_with("/api/discard-file") {
+        if method != "POST" {
+            return json_response(405, r#"{"error":"Method not allowed."}"#);
+        }
+        return handle_discard_file_request(target, working_changes_writer);
+    }
+
+    if target.starts_with("/api/stage-hunk") {
+        if method != "POST" {
+            return json_response(405, r#"{"error":"Method not allowed."}"#);
+        }
+        return handle_stage_hunk_request(target, working_changes_writer);
+    }
+
+    if target.starts_with("/api/discard-hunk") {
+        if method != "POST" {
+            return json_response(405, r#"{"error":"Method not allowed."}"#);
+        }
+        return handle_discard_hunk_request(target, working_changes_writer);
+    }
+
+    if target.starts_with("/api/unstage-hunk") {
+        if method != "POST" {
+            return json_response(405, r#"{"error":"Method not allowed."}"#);
+        }
+        return handle_unstage_hunk_request(target, working_changes_writer);
+    }
 
     if method != "GET" {
         return json_response(405, r#"{"error":"Method not allowed."}"#);
@@ -118,6 +175,10 @@ fn route_request(
 
     if target.starts_with("/api/browse-directory") {
         return handle_browse_directory_request(target, directory_browser);
+    }
+
+    if target.starts_with("/api/repo-signature") {
+        return handle_repo_signature_request(target, repo_signature_reader);
     }
 
     json_response(404, r#"{"error":"Not found."}"#)
@@ -196,7 +257,9 @@ fn handle_file_diff_request(target: &str, file_diff_reader: &dyn FileDiffReader)
         return json_response(400, r#"{"error":"Missing path query parameter."}"#);
     };
 
-    match read_file_diff(file_diff_reader, &path, &commit_id, &file_path) {
+    let staged = extract_query_param(target, "staged").as_deref() == Some("true");
+
+    match read_file_diff(file_diff_reader, &path, &commit_id, &file_path, staged) {
         Ok(diff) => json_response(200, &format!(r#"{{"diff":"{}"}}"#, escape_json(&diff))),
         Err(error) => json_response(
             500,
@@ -226,6 +289,143 @@ fn handle_browse_directory_request(target: &str, directory_browser: &dyn Directo
 
     match read_directory_listing(directory_browser, &path) {
         Ok(listing) => json_response(200, &directory_listing_to_json(&listing)),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_repo_signature_request(
+    target: &str,
+    repo_signature_reader: &dyn RepoSignatureReader,
+) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    match read_repo_signature(repo_signature_reader, &path) {
+        Ok(signature) => json_response(200, &format!(r#"{{"signature":"{}"}}"#, escape_json(&signature))),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_stage_file_request(target: &str, working_changes_writer: &dyn WorkingChangesWriter) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    let Some(file_path) = extract_query_param(target, "path") else {
+        return json_response(400, r#"{"error":"Missing path query parameter."}"#);
+    };
+
+    match stage_file(working_changes_writer, &path, &file_path) {
+        Ok(()) => json_response(200, r#"{"ok":true}"#),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_unstage_file_request(target: &str, working_changes_writer: &dyn WorkingChangesWriter) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    let Some(file_path) = extract_query_param(target, "path") else {
+        return json_response(400, r#"{"error":"Missing path query parameter."}"#);
+    };
+
+    match unstage_file(working_changes_writer, &path, &file_path) {
+        Ok(()) => json_response(200, r#"{"ok":true}"#),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_discard_file_request(target: &str, working_changes_writer: &dyn WorkingChangesWriter) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    let Some(file_path) = extract_query_param(target, "path") else {
+        return json_response(400, r#"{"error":"Missing path query parameter."}"#);
+    };
+
+    match discard_file(working_changes_writer, &path, &file_path) {
+        Ok(()) => json_response(200, r#"{"ok":true}"#),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_stage_hunk_request(target: &str, working_changes_writer: &dyn WorkingChangesWriter) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    let Some(file_path) = extract_query_param(target, "path") else {
+        return json_response(400, r#"{"error":"Missing path query parameter."}"#);
+    };
+
+    let Some(hunk) = extract_query_param(target, "hunk") else {
+        return json_response(400, r#"{"error":"Missing hunk query parameter."}"#);
+    };
+
+    match stage_hunk(working_changes_writer, &path, &file_path, &hunk) {
+        Ok(()) => json_response(200, r#"{"ok":true}"#),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_discard_hunk_request(target: &str, working_changes_writer: &dyn WorkingChangesWriter) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    let Some(file_path) = extract_query_param(target, "path") else {
+        return json_response(400, r#"{"error":"Missing path query parameter."}"#);
+    };
+
+    let Some(hunk) = extract_query_param(target, "hunk") else {
+        return json_response(400, r#"{"error":"Missing hunk query parameter."}"#);
+    };
+
+    match discard_hunk(working_changes_writer, &path, &file_path, &hunk) {
+        Ok(()) => json_response(200, r#"{"ok":true}"#),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_unstage_hunk_request(target: &str, working_changes_writer: &dyn WorkingChangesWriter) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    let Some(file_path) = extract_query_param(target, "path") else {
+        return json_response(400, r#"{"error":"Missing path query parameter."}"#);
+    };
+
+    let Some(hunk) = extract_query_param(target, "hunk") else {
+        return json_response(400, r#"{"error":"Missing hunk query parameter."}"#);
+    };
+
+    match unstage_hunk(working_changes_writer, &path, &file_path, &hunk) {
+        Ok(()) => json_response(200, r#"{"ok":true}"#),
         Err(error) => json_response(
             500,
             &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
@@ -347,9 +547,10 @@ fn file_changes_to_json(files: &[FileChange]) -> String {
         .iter()
         .map(|file| {
             format!(
-                r#"{{"path":"{}","changeType":"{}"}}"#,
+                r#"{{"path":"{}","changeType":"{}","isStaged":{}}}"#,
                 escape_json(&file.path),
                 file_change_type_to_json(file.change_type),
+                file.is_staged,
             )
         })
         .collect::<Vec<_>>()
@@ -477,8 +678,21 @@ fn percent_decode(input: &str) -> String {
 }
 
 fn escape_json(input: &str) -> String {
-    input
-        .replace('\\', "\\\\")
-        .replace('"', "\\\"")
-        .replace('\n', "\\n")
+    let mut result = String::with_capacity(input.len());
+
+    for character in input.chars() {
+        match character {
+            '\\' => result.push_str("\\\\"),
+            '"' => result.push_str("\\\""),
+            '\n' => result.push_str("\\n"),
+            '\r' => result.push_str("\\r"),
+            '\t' => result.push_str("\\t"),
+            other if (other as u32) < 0x20 => {
+                result.push_str(&format!("\\u{:04x}", other as u32));
+            }
+            other => result.push(other),
+        }
+    }
+
+    result
 }

@@ -24,5 +24,6 @@ fn parse_name_status_line(line: &str) -> Option<FileChange> {
     Some(FileChange {
         path: path.to_string(),
         change_type,
+        is_staged: false,
     })
 }
