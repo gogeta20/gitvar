@@ -84,3 +84,75 @@
   --gradient-app-bottom-start: #282a36;
   --gradient-app-bottom-end: #21222c;
 }
+
+:root[data-theme="vscode-dark"] {
+  color-scheme: dark;
+
+  --color-bg-app: #1e1e1e;
+  --color-bg-elevated: #181818;
+  --color-bg-panel: rgba(37, 37, 38, 0.82);
+  --color-bg-panel-muted: rgba(37, 37, 38, 0.56);
+  --color-bg-panel-strong: rgba(51, 51, 51, 0.94);
+  --color-bg-button: rgba(60, 60, 60, 0.5);
+
+  --color-border-default: rgba(204, 204, 204, 0.16);
+  --color-border-strong: rgba(86, 156, 214, 0.5);
+  --color-border-selected: rgba(14, 99, 156, 0.65);
+
+  --color-text-primary: #d4d4d4;
+  --color-text-secondary: #cccccc;
+  --color-text-muted: #808080;
+  --color-text-accent: #569cd6;
+
+  --color-badge-neutral: rgba(255, 255, 255, 0.08);
+  --color-badge-accent: rgba(14, 99, 156, 0.38);
+  --color-badge-accent-text: #9cdcfe;
+
+  --color-graph-lane-0: #569cd6;
+  --color-graph-lane-1: #4ec9b0;
+  --color-graph-lane-2: #d7ba7d;
+  --color-graph-lane-3: #c586c0;
+  --color-graph-lane-default: #569cd6;
+
+  --shadow-surface: 0 20px 60px rgba(0, 0, 0, 0.5);
+
+  --gradient-app-top: rgba(86, 156, 214, 0.12);
+  --gradient-app-bottom-start: #1e1e1e;
+  --gradient-app-bottom-end: #181818;
+}
+
+:root[data-theme="tokyo-night"] {
+  color-scheme: dark;
+
+  --color-bg-app: #1a1b26;
+  --color-bg-elevated: #16161e;
+  --color-bg-panel: rgba(41, 46, 66, 0.72);
+  --color-bg-panel-muted: rgba(41, 46, 66, 0.5);
+  --color-bg-panel-strong: rgba(41, 46, 66, 0.9);
+  --color-bg-button: rgba(65, 72, 104, 0.45);
+
+  --color-border-default: rgba(65, 72, 104, 0.4);
+  --color-border-strong: rgba(122, 162, 247, 0.5);
+  --color-border-selected: rgba(157, 124, 216, 0.65);
+
+  --color-text-primary: #c0caf5;
+  --color-text-secondary: #a9b1d6;
+  --color-text-muted: #565f89;
+  --color-text-accent: #7dcfff;
+
+  --color-badge-neutral: rgba(65, 72, 104, 0.4);
+  --color-badge-accent: rgba(122, 162, 247, 0.24);
+  --color-badge-accent-text: #c0caf5;
+
+  --color-graph-lane-0: #7aa2f7;
+  --color-graph-lane-1: #9ece6a;
+  --color-graph-lane-2: #e0af68;
+  --color-graph-lane-3: #bb9af7;
+  --color-graph-lane-default: #7aa2f7;
+
+  --shadow-surface: 0 20px 60px rgba(10, 10, 20, 0.45);
+
+  --gradient-app-top: rgba(122, 162, 247, 0.14);
+  --gradient-app-bottom-start: #1a1b26;
+  --gradient-app-bottom-end: #16161e;
+}
