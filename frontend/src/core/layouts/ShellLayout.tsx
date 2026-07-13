@@ -1,23 +1,21 @@
-import { PropsWithChildren } from "react";
+import { PropsWithChildren, ReactNode } from "react";
 import styles from "./ShellLayout.module.css";
 
 interface ShellLayoutProps extends PropsWithChildren {
-  title: string;
   eyebrow?: string;
+  headerActions?: ReactNode;
 }
 
 export function ShellLayout({
   children,
-  title,
-  eyebrow = "GitMap"
+  eyebrow = "GitMap",
+  headerActions
 }: ShellLayoutProps) {
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>{eyebrow}</p>
-          <h1 className={styles.title}>{title}</h1>
-        </div>
+        <p className={styles.eyebrow}>{eyebrow}</p>
+        <div className={styles.headerActions}>{headerActions}</div>
       </header>
       <main className={styles.content}>{children}</main>
     </div>

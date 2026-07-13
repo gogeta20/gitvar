@@ -10,7 +10,7 @@
 .grip {
   width: 3px;
   height: 40px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--color-border-default);
   transition: background 140ms ease;
 }
