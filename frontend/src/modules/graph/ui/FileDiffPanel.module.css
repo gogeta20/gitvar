@@ -17,7 +17,7 @@
   align-items: center;
   gap: 6px;
   border: 1px solid var(--color-border-default);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-bg-button);
   color: var(--color-text-primary);
   padding: 6px 10px;
@@ -59,7 +59,7 @@
 
 .hunk {
   border: 1px solid var(--color-border-default);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   transition: border-color 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
 }
@@ -124,7 +124,7 @@
   color: #4c8dff;
   background: rgba(76, 141, 255, 0.15);
   border: 1px solid rgba(76, 141, 255, 0.4);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 2px 8px;
   white-space: nowrap;
 }
@@ -143,7 +143,7 @@
   gap: 4px;
   height: 22px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-secondary);
   font: inherit;

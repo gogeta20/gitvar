@@ -49,6 +49,11 @@
   backdrop-filter: var(--backdrop-surface);
 }
 
+.sidebarSection:not(:has(.sidebarSectionBody)) {
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+}
+
 .sidebarSectionHeader,
 .sidebarSectionTitleRow {
   display: flex;
@@ -60,7 +65,7 @@
   gap: var(--space-3);
 }
 
-.sidebarSectionHeader {
+.sidebarSectionHeader:has(+ .sidebarSectionBody) {
   margin-bottom: var(--space-3);
 }
 
@@ -71,7 +76,7 @@
 
 .sidebarSectionTitleButton {
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text-primary);
   cursor: pointer;

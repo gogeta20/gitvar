@@ -1,17 +1,23 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ShellLayout } from "@core/layouts/ShellLayout";
 import { usePersistedState } from "@core/hooks/usePersistedState";
 import { HomePage } from "@pages/HomePage";
 import { RepositoryWorkspacePage } from "@pages/RepositoryWorkspacePage";
 import { RepositorySummary } from "@modules/repository/domain/repository";
 import { WorkspaceTabsBar } from "@modules/repository/ui/WorkspaceTabsBar";
+import { SettingsMenu } from "@app/settings/SettingsMenu";
+import { ThemeSettingsModal } from "@app/settings/ThemeSettingsModal";
+import { DEFAULT_THEME_ID } from "@app/settings/themePresets";
 
 const MAX_RECENT_REPOSITORIES = 8;
 
 export function App() {
+  const [themeId, setThemeId] = usePersistedState<string>("gitmap.themeId", DEFAULT_THEME_ID);
+  const [isStyleModalOpen, setIsStyleModalOpen] = useState(false);
+
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", "dracula");
-  }, []);
+    document.documentElement.setAttribute("data-theme", themeId);
+  }, [themeId]);
 
   const [openRepositories, setOpenRepositories] = usePersistedState<RepositorySummary[]>(
     "gitmap.openRepositories",
@@ -45,20 +51,32 @@ export function App() {
   const activeRepository = openRepositories.find((item) => item.id === activeRepositoryId) ?? null;
 
   return (
-    <ShellLayout title={activeRepository ? "Repository workspace" : "Choose a repository"}>
-      <WorkspaceTabsBar
-        activeRepositoryId={activeRepositoryId}
-        onAddTab={() => setActiveRepositoryId(null)}
-        onCloseTab={handleCloseTab}
-        onSelectTab={setActiveRepositoryId}
-        openRepositories={openRepositories}
-      />
+    <>
+      <ShellLayout
+        headerActions={<SettingsMenu onOpenStyleSettings={() => setIsStyleModalOpen(true)} />}
+      >
+        <WorkspaceTabsBar
+          activeRepositoryId={activeRepositoryId}
+          onAddTab={() => setActiveRepositoryId(null)}
+          onCloseTab={handleCloseTab}
+          onSelectTab={setActiveRepositoryId}
+          openRepositories={openRepositories}
+        />
 
-      {activeRepository ? (
-        <RepositoryWorkspacePage repository={activeRepository} />
-      ) : (
-        <HomePage onOpenRepository={handleOpenRepository} recentRepositories={recentRepositories} />
-      )}
-    </ShellLayout>
+        {activeRepository ? (
+          <RepositoryWorkspacePage repository={activeRepository} />
+        ) : (
+          <HomePage onOpenRepository={handleOpenRepository} recentRepositories={recentRepositories} />
+        )}
+      </ShellLayout>
+
+      {isStyleModalOpen ? (
+        <ThemeSettingsModal
+          activeThemeId={themeId}
+          onClose={() => setIsStyleModalOpen(false)}
+          onSelectTheme={setThemeId}
+        />
+      ) : null}
+    </>
   );
 }

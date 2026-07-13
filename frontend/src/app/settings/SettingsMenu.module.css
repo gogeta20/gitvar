@@ -7,7 +7,7 @@
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  min-width: 140px;
+  min-width: 160px;
   padding: var(--space-2);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-lg);
@@ -17,17 +17,20 @@
   z-index: 20;
 }
 
-.option {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 6px 8px;
+.menuItem {
+  display: block;
+  width: 100%;
+  border: 0;
   border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--color-text-primary);
+  padding: 6px 8px;
+  font: inherit;
   font-size: 13px;
+  text-align: left;
   cursor: pointer;
 }
 
-.option:hover {
+.menuItem:hover {
   background: rgba(255, 255, 255, 0.06);
 }
