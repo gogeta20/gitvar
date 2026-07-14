@@ -48,6 +48,15 @@ impl WorkingChangesWriter for GitCliWorkingChangesWriter {
         let patch = build_hunk_patch(repository_path, file_path, hunk)?;
         apply_patch(repository_path, &patch, &["-R", "--cached"])
     }
+
+    fn stage_all(&self, repository_path: &Path) -> Result<(), AppError> {
+        run_git(repository_path, &["add", "-A"])
+    }
+
+    fn discard_all(&self, repository_path: &Path) -> Result<(), AppError> {
+        run_git(repository_path, &["reset", "--hard", "HEAD"])?;
+        run_git(repository_path, &["clean", "-fd"])
+    }
 }
 
 fn build_hunk_patch(repository_path: &Path, file_path: &str, hunk: &str) -> Result<String, AppError> {
@@ -66,7 +75,7 @@ fn build_hunk_patch(repository_path: &Path, file_path: &str, hunk: &str) -> Resu
 
 fn is_untracked(repository_path: &Path, file_path: &str) -> Result<bool, AppError> {
     let output = Command::new("git")
-        .args(["status", "--porcelain", "--", file_path])
+        .args(["status", "--porcelain", "--untracked-files=all", "--", file_path])
         .current_dir(repository_path)
         .output()
         .map_err(|error| AppError::IoError(error.to_string()))?;

@@ -1,7 +1,9 @@
 import { WorkingChangesWriter } from "@modules/graph/application/contracts/WorkingChangesWriter";
 import {
+  discardAllFromApi,
   discardFileFromApi,
   discardHunkFromApi,
+  stageAllFromApi,
   stageFileFromApi,
   stageHunkFromApi,
   unstageFileFromApi,
@@ -15,6 +17,8 @@ export function createWorkingChangesWriter(): WorkingChangesWriter {
     discardFile: discardFileFromApi,
     stageHunk: stageHunkFromApi,
     discardHunk: discardHunkFromApi,
-    unstageHunk: unstageHunkFromApi
+    unstageHunk: unstageHunkFromApi,
+    stageAll: stageAllFromApi,
+    discardAll: discardAllFromApi
   };
 }

@@ -5,4 +5,6 @@ export interface WorkingChangesWriter {
   stageHunk(repositoryPath: string, filePath: string, hunk: string): Promise<void>;
   discardHunk(repositoryPath: string, filePath: string, hunk: string): Promise<void>;
   unstageHunk(repositoryPath: string, filePath: string, hunk: string): Promise<void>;
+  stageAll(repositoryPath: string): Promise<void>;
+  discardAll(repositoryPath: string): Promise<void>;
 }

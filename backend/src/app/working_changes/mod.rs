@@ -1,6 +1,8 @@
 pub mod contracts;
+pub mod discard_all;
 pub mod discard_file;
 pub mod discard_hunk;
+pub mod stage_all;
 pub mod stage_file;
 pub mod stage_hunk;
 pub mod unstage_file;
