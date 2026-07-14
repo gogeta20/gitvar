@@ -475,6 +475,24 @@
   background: rgba(245, 185, 66, 0.15);
 }
 
+.unstagedSection {
+  border-radius: var(--radius-md);
+  background: rgba(214, 90, 156, 0.1);
+  padding: var(--space-2);
+}
+
+.stagedSection {
+  border-radius: var(--radius-md);
+  background: rgba(46, 204, 113, 0.1);
+  padding: var(--space-2);
+}
+
+.sectionDivider {
+  height: 1px;
+  margin: var(--space-3) 0;
+  background: var(--color-border-default);
+}
+
 .fileSectionHeader {
   display: flex;
   align-items: center;

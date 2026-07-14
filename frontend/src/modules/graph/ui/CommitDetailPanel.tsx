@@ -557,42 +557,48 @@ export function CommitDetailPanel({
               </div>
             ) : null}
 
-            <div className={styles.fileSectionHeader}>Staged changes ({stagedFiles.length})</div>
-            {stagedFiles.length === 0 ? (
-              <p className={styles.fileSectionEmpty}>Nothing staged yet.</p>
-            ) : viewMode === "tree" ? (
-              <FileTreeView
-                colorizeFileNames={colorizeFileNames}
-                depth={0}
-                entries={stagedTree}
-                expandedPaths={expandedPaths}
-                onSelectFile={onSelectFile}
-                onToggleFolder={toggleExpanded}
-                onUnstageFile={handleUnstageFile}
-                selectedFilePath={selectedFilePath}
-              />
-            ) : (
-              stagedFiles.sort(compareFiles).map(renderFileRow)
-            )}
+            <div className={styles.unstagedSection}>
+              <div className={styles.fileSectionHeader}>Changes ({unstagedFiles.length})</div>
+              {unstagedFiles.length === 0 ? (
+                <p className={styles.fileSectionEmpty}>No unstaged changes.</p>
+              ) : viewMode === "tree" ? (
+                <FileTreeView
+                  colorizeFileNames={colorizeFileNames}
+                  depth={0}
+                  entries={unstagedTree}
+                  expandedPaths={expandedPaths}
+                  onDiscardFile={handleDiscardFile}
+                  onSelectFile={onSelectFile}
+                  onStageFile={handleStageFile}
+                  onToggleFolder={toggleExpanded}
+                  selectedFilePath={selectedFilePath}
+                />
+              ) : (
+                unstagedFiles.sort(compareFiles).map(renderFileRow)
+              )}
+            </div>
 
-            <div className={styles.fileSectionHeader}>Changes ({unstagedFiles.length})</div>
-            {unstagedFiles.length === 0 ? (
-              <p className={styles.fileSectionEmpty}>No unstaged changes.</p>
-            ) : viewMode === "tree" ? (
-              <FileTreeView
-                colorizeFileNames={colorizeFileNames}
-                depth={0}
-                entries={unstagedTree}
-                expandedPaths={expandedPaths}
-                onDiscardFile={handleDiscardFile}
-                onSelectFile={onSelectFile}
-                onStageFile={handleStageFile}
-                onToggleFolder={toggleExpanded}
-                selectedFilePath={selectedFilePath}
-              />
-            ) : (
-              unstagedFiles.sort(compareFiles).map(renderFileRow)
-            )}
+            <div className={styles.sectionDivider} />
+
+            <div className={styles.stagedSection}>
+              <div className={styles.fileSectionHeader}>Staged changes ({stagedFiles.length})</div>
+              {stagedFiles.length === 0 ? (
+                <p className={styles.fileSectionEmpty}>Nothing staged yet.</p>
+              ) : viewMode === "tree" ? (
+                <FileTreeView
+                  colorizeFileNames={colorizeFileNames}
+                  depth={0}
+                  entries={stagedTree}
+                  expandedPaths={expandedPaths}
+                  onSelectFile={onSelectFile}
+                  onToggleFolder={toggleExpanded}
+                  onUnstageFile={handleUnstageFile}
+                  selectedFilePath={selectedFilePath}
+                />
+              ) : (
+                stagedFiles.sort(compareFiles).map(renderFileRow)
+              )}
+            </div>
           </>
         ) : viewMode === "tree" ? (
           <FileTreeView
