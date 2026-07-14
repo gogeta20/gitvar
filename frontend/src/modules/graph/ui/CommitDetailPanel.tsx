@@ -18,9 +18,11 @@ import { CopyableHash } from "@core/components/CopyableHash";
 import { InfoCard } from "@core/components/InfoCard";
 import { Tooltip } from "@core/components/Tooltip";
 import { usePersistedState } from "@core/hooks/usePersistedState";
+import { discardAll } from "@modules/graph/application/use-cases/discardAll";
 import { discardFile } from "@modules/graph/application/use-cases/discardFile";
 import { readCommitFiles } from "@modules/graph/application/use-cases/readCommitFiles";
 import { readStatus } from "@modules/graph/application/use-cases/readStatus";
+import { stageAll } from "@modules/graph/application/use-cases/stageAll";
 import { stageFile } from "@modules/graph/application/use-cases/stageFile";
 import { unstageFile } from "@modules/graph/application/use-cases/unstageFile";
 import { GraphCommit } from "@modules/graph/domain/commit";
@@ -150,6 +152,30 @@ export function CommitDetailPanel({
     const workingChangesWriter = createWorkingChangesWriter();
 
     discardFile(workingChangesWriter, repositoryPath, filePath)
+      .then(refreshWorkingStatus)
+      .catch(handleActionError);
+  }
+
+  function handleStageAll() {
+    const workingChangesWriter = createWorkingChangesWriter();
+
+    stageAll(workingChangesWriter, repositoryPath)
+      .then(refreshWorkingStatus)
+      .catch(handleActionError);
+  }
+
+  function handleDiscardAll() {
+    if (
+      !window.confirm(
+        "Discard all changes in the working directory? This cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    const workingChangesWriter = createWorkingChangesWriter();
+
+    discardAll(workingChangesWriter, repositoryPath)
       .then(refreshWorkingStatus)
       .catch(handleActionError);
   }
@@ -509,6 +535,28 @@ export function CommitDetailPanel({
           filteredFiles.map(renderFileRow)
         ) : showStagingActions ? (
           <>
+            {stagedFiles.length > 0 || unstagedFiles.length > 0 ? (
+              <div className={styles.bulkActionsRow}>
+                <button
+                  className={styles.bulkActionButton}
+                  disabled={unstagedFiles.length === 0}
+                  onClick={handleStageAll}
+                  type="button"
+                >
+                  <Check size={13} />
+                  Stage all
+                </button>
+                <button
+                  className={`${styles.bulkActionButton} ${styles.bulkActionButtonDiscard}`}
+                  onClick={handleDiscardAll}
+                  type="button"
+                >
+                  <Trash2 size={13} />
+                  Discard all
+                </button>
+              </div>
+            ) : null}
+
             <div className={styles.fileSectionHeader}>Staged changes ({stagedFiles.length})</div>
             {stagedFiles.length === 0 ? (
               <p className={styles.fileSectionEmpty}>Nothing staged yet.</p>

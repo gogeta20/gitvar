@@ -196,6 +196,49 @@
   margin-bottom: var(--space-3);
 }
 
+.bulkActionsRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.bulkActionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(46, 204, 113, 0.4);
+  border-radius: var(--radius-md);
+  background: rgba(46, 204, 113, 0.14);
+  color: #2ecc71;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bulkActionButton:hover:not(:disabled) {
+  background: rgba(46, 204, 113, 0.26);
+  border-color: rgba(46, 204, 113, 0.7);
+}
+
+.bulkActionButton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.bulkActionButtonDiscard {
+  border-color: rgba(255, 107, 107, 0.3);
+  background: transparent;
+  color: #ff6b6b;
+}
+
+.bulkActionButtonDiscard:hover:not(:disabled) {
+  background: rgba(255, 107, 107, 0.2);
+  border-color: rgba(255, 107, 107, 0.6);
+}
+
 .toolbarIconButton {
   display: inline-flex;
   align-items: center;

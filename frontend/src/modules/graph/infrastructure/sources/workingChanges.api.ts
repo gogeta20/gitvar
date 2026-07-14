@@ -62,3 +62,22 @@ export async function unstageHunkFromApi(
 ): Promise<void> {
   return postHunkAction("/api/unstage-hunk", repositoryPath, filePath, hunk);
 }
+
+async function postRepositoryAction(endpoint: string, repositoryPath: string): Promise<void> {
+  const url = `${API_BASE_URL}${endpoint}?repoPath=${encodeURIComponent(repositoryPath)}`;
+
+  const response = await fetch(url, { method: "POST" });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Request to ${endpoint} failed. ${text}`);
+  }
+}
+
+export async function stageAllFromApi(repositoryPath: string): Promise<void> {
+  return postRepositoryAction("/api/stage-all", repositoryPath);
+}
+
+export async function discardAllFromApi(repositoryPath: string): Promise<void> {
+  return postRepositoryAction("/api/discard-all", repositoryPath);
+}

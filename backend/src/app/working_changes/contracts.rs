@@ -9,4 +9,6 @@ pub trait WorkingChangesWriter {
     fn stage_hunk(&self, repository_path: &Path, file_path: &str, hunk: &str) -> Result<(), AppError>;
     fn discard_hunk(&self, repository_path: &Path, file_path: &str, hunk: &str) -> Result<(), AppError>;
     fn unstage_hunk(&self, repository_path: &Path, file_path: &str, hunk: &str) -> Result<(), AppError>;
+    fn stage_all(&self, repository_path: &Path) -> Result<(), AppError>;
+    fn discard_all(&self, repository_path: &Path) -> Result<(), AppError>;
 }

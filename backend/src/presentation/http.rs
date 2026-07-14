@@ -19,8 +19,10 @@ use crate::app::stash::read_stash::read_stash;
 use crate::app::status::contracts::StatusReader;
 use crate::app::status::read_status::read_status;
 use crate::app::working_changes::contracts::WorkingChangesWriter;
+use crate::app::working_changes::discard_all::discard_all;
 use crate::app::working_changes::discard_file::discard_file;
 use crate::app::working_changes::discard_hunk::discard_hunk;
+use crate::app::working_changes::stage_all::stage_all;
 use crate::app::working_changes::stage_file::stage_file;
 use crate::app::working_changes::stage_hunk::stage_hunk;
 use crate::app::working_changes::unstage_file::unstage_file;
@@ -143,6 +145,20 @@ fn route_request(
             return json_response(405, r#"{"error":"Method not allowed."}"#);
         }
         return handle_unstage_hunk_request(target, working_changes_writer);
+    }
+
+    if target.starts_with("/api/stage-all") {
+        if method != "POST" {
+            return json_response(405, r#"{"error":"Method not allowed."}"#);
+        }
+        return handle_stage_all_request(target, working_changes_writer);
+    }
+
+    if target.starts_with("/api/discard-all") {
+        if method != "POST" {
+            return json_response(405, r#"{"error":"Method not allowed."}"#);
+        }
+        return handle_discard_all_request(target, working_changes_writer);
     }
 
     if method != "GET" {
@@ -425,6 +441,34 @@ fn handle_unstage_hunk_request(target: &str, working_changes_writer: &dyn Workin
     };
 
     match unstage_hunk(working_changes_writer, &path, &file_path, &hunk) {
+        Ok(()) => json_response(200, r#"{"ok":true}"#),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_stage_all_request(target: &str, working_changes_writer: &dyn WorkingChangesWriter) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    match stage_all(working_changes_writer, &path) {
+        Ok(()) => json_response(200, r#"{"ok":true}"#),
+        Err(error) => json_response(
+            500,
+            &format!(r#"{{"error":"{}"}}"#, escape_json(&error.to_string())),
+        ),
+    }
+}
+
+fn handle_discard_all_request(target: &str, working_changes_writer: &dyn WorkingChangesWriter) -> String {
+    let Some(path) = extract_repo_path(target) else {
+        return json_response(400, r#"{"error":"Missing repoPath query parameter."}"#);
+    };
+
+    match discard_all(working_changes_writer, &path) {
         Ok(()) => json_response(200, r#"{"ok":true}"#),
         Err(error) => json_response(
             500,
