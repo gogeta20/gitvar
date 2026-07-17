@@ -9,4 +9,4 @@ export const THEME_PRESETS: ThemePreset[] = [
   { id: "tokyo-night", label: "Tokyo Night" }
 ];
 
-export const DEFAULT_THEME_ID = THEME_PRESETS[0].id;
+export const DEFAULT_THEME_ID = "vscode-dark";
