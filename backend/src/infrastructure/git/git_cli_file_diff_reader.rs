@@ -61,6 +61,10 @@ fn read_working_directory_diff(
     let is_untracked = is_untracked_file(repository_path, file_path)?;
 
     if is_untracked {
+        if staged {
+            return Ok(String::new());
+        }
+
         return read_untracked_file_as_diff(repository_path, file_path);
     }
 
@@ -87,7 +91,7 @@ fn read_working_directory_diff(
 
 fn is_untracked_file(repository_path: &Path, file_path: &str) -> Result<bool, AppError> {
     let output = Command::new("git")
-        .args(["status", "--porcelain", "--", file_path])
+        .args(["status", "--porcelain", "--untracked-files=all", "--", file_path])
         .current_dir(repository_path)
         .output()
         .map_err(|error| AppError::IoError(error.to_string()))?;

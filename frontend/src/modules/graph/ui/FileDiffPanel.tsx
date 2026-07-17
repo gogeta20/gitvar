@@ -11,8 +11,10 @@ import {
   Trash2,
   Undo2
 } from "lucide-react";
+import type { ThemedToken } from "shiki";
 import { IconButton } from "@core/components/IconButton";
 import { InfoCard } from "@core/components/InfoCard";
+import { useAppThemeId } from "@core/hooks/useAppThemeId";
 import { discardHunk } from "@modules/graph/application/use-cases/discardHunk";
 import { readFileDiff } from "@modules/graph/application/use-cases/readFileDiff";
 import { stageHunk } from "@modules/graph/application/use-cases/stageHunk";
@@ -22,6 +24,7 @@ import { WORKING_CHANGES_COMMIT_ID } from "@modules/graph/domain/workingStatus";
 import { createFileDiffReader } from "@modules/graph/infrastructure/FileDiffReaderProvider";
 import { createWorkingChangesWriter } from "@modules/graph/infrastructure/WorkingChangesWriterProvider";
 import { buildHunkPatchText } from "@modules/graph/lib/buildHunkPatchText";
+import { highlightHunkLines } from "@modules/graph/lib/highlightHunkLines";
 import { parseDiffHunks } from "@modules/graph/lib/parseDiffHunks";
 import styles from "./FileDiffPanel.module.css";
 
@@ -50,6 +53,8 @@ export function FileDiffPanel({
   const [stagedDiffText, setStagedDiffText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [expandedStagedHunks, setExpandedStagedHunks] = useState<Set<string>>(new Set());
+  const [hunkTokens, setHunkTokens] = useState<Record<string, ThemedToken[][]>>({});
+  const themeId = useAppThemeId();
 
   const isWorkingChanges = commitId === WORKING_CHANGES_COMMIT_ID;
 
@@ -135,12 +140,51 @@ export function FileDiffPanel({
   const hunks = parseDiffHunks(diffText);
   const stagedHunks = isWorkingChanges ? parseDiffHunks(stagedDiffText) : [];
 
-  function renderHunkLines(hunk: DiffHunk) {
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function tokenizeAllHunks() {
+      const entries = await Promise.all(
+        [
+          ...hunks.map((hunk, index) => [`unstaged:${index}`, hunk] as const),
+          ...stagedHunks.map((hunk, index) => [`staged:${index}`, hunk] as const)
+        ].map(async ([key, hunk]) => {
+          const tokens = await highlightHunkLines(hunk, filePath, themeId);
+          return [key, tokens] as const;
+        })
+      );
+
+      if (!isCancelled) {
+        setHunkTokens(Object.fromEntries(entries));
+      }
+    }
+
+    tokenizeAllHunks();
+
+    return () => {
+      isCancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [diffText, stagedDiffText, filePath, themeId]);
+
+  function renderHunkLines(hunk: DiffHunk, tokensKey: string) {
+    const tokenLines = hunkTokens[tokensKey];
+
     return hunk.lines.map((line, lineIndex) => (
       <div className={`${styles.hunkLine} ${styles[`hunkLine-${line.type}`]}`} key={lineIndex}>
         <span className={styles.lineNumber}>{line.oldLineNumber ?? ""}</span>
         <span className={styles.lineNumber}>{line.newLineNumber ?? ""}</span>
-        <span className={styles.lineContent}>{line.content || " "}</span>
+        <span className={styles.lineContent}>
+          {tokenLines?.[lineIndex] ? (
+            tokenLines[lineIndex].map((token, tokenIndex) => (
+              <span key={tokenIndex} style={{ color: token.color }}>
+                {token.content}
+              </span>
+            ))
+          ) : (
+            line.content || " "
+          )}
+        </span>
       </div>
     ));
   }
@@ -175,7 +219,7 @@ export function FileDiffPanel({
             </div>
           ) : null}
         </div>
-        {renderHunkLines(hunk)}
+        {renderHunkLines(hunk, `unstaged:${hunkIndex}`)}
       </div>
     );
   }
@@ -212,7 +256,7 @@ export function FileDiffPanel({
             </button>
           </div>
         </div>
-        {isExpanded ? renderHunkLines(hunk) : null}
+        {isExpanded ? renderHunkLines(hunk, `staged:${hunkIndex}`) : null}
       </div>
     );
   }
