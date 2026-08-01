@@ -17,7 +17,7 @@ impl GitCliStatusReader {
 impl StatusReader for GitCliStatusReader {
     fn read_status(&self, repository_path: &Path) -> Result<WorkingStatus, AppError> {
         let porcelain_output = Command::new("git")
-            .args(["status", "--porcelain"])
+            .args(["status", "--porcelain", "--untracked-files=all"])
             .current_dir(repository_path)
             .output()
             .map_err(|error| AppError::IoError(error.to_string()))?;
