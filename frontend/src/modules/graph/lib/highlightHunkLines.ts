@@ -1,7 +1,7 @@
-import { getSingletonHighlighter, type ThemedToken } from "shiki";
+import { getSingletonHighlighter, type BundledLanguage, type BundledTheme, type ThemedToken } from "shiki";
 import { DiffHunk } from "@modules/graph/domain/diffHunk";
 
-const EXTENSION_TO_SHIKI_LANG: Record<string, string> = {
+const EXTENSION_TO_SHIKI_LANG: Record<string, BundledLanguage> = {
   ts: "typescript",
   tsx: "tsx",
   js: "javascript",
@@ -22,19 +22,19 @@ const EXTENSION_TO_SHIKI_LANG: Record<string, string> = {
   rb: "ruby"
 };
 
-const APP_THEME_TO_SHIKI_THEME: Record<string, string> = {
+const APP_THEME_TO_SHIKI_THEME: Record<string, BundledTheme> = {
   dracula: "dracula",
   "vscode-dark": "dark-plus",
   "tokyo-night": "tokyo-night"
 };
 
-const DEFAULT_SHIKI_THEME = "dark-plus";
+const DEFAULT_SHIKI_THEME: BundledTheme = "dark-plus";
 
-export function shikiThemeForAppTheme(appThemeId: string): string {
+export function shikiThemeForAppTheme(appThemeId: string): BundledTheme {
   return APP_THEME_TO_SHIKI_THEME[appThemeId] ?? DEFAULT_SHIKI_THEME;
 }
 
-export function shikiLangForFilePath(filePath: string): string {
+export function shikiLangForFilePath(filePath: string): BundledLanguage | "text" {
   const extension = filePath.split(".").pop()?.toLowerCase() ?? "";
   return EXTENSION_TO_SHIKI_LANG[extension] ?? "text";
 }

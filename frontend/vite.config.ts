@@ -4,6 +4,9 @@ import { resolve } from "node:path";
 
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: {
+    include: ["shiki"]
+  },
   resolve: {
     alias: {
       "@app": resolve(__dirname, "src/app"),
