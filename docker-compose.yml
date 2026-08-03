@@ -5,8 +5,11 @@ services:
       dockerfile: devops/docker/Dockerfile.dev
     container_name: gitmap-dev-parallel
     working_dir: /workspace
+    environment:
+      - GITMAP_BROWSE_ROOT=/host/home
     volumes:
       - ./:/workspace
+      - ${HOME}:/host/home
       - cargo-cache:/usr/local/cargo/registry
       - rustup-cache:/usr/local/rustup
       - node-cache:/workspace/frontend/node_modules
@@ -21,4 +24,3 @@ volumes:
   cargo-cache:
   rustup-cache:
   node-cache:
-

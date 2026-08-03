@@ -480,7 +480,15 @@ fn handle_discard_all_request(target: &str, working_changes_writer: &dyn Working
 fn default_browse_root() -> PathBuf {
     std::env::var("GITMAP_BROWSE_ROOT")
         .map(PathBuf::from)
-        .unwrap_or_else(|_| PathBuf::from("/workspace"))
+        .unwrap_or_else(|_| {
+            let host_home = PathBuf::from("/host/home");
+
+            if host_home.is_dir() {
+                host_home
+            } else {
+                PathBuf::from("/workspace")
+            }
+        })
 }
 
 fn extract_repo_path(target: &str) -> Option<PathBuf> {
@@ -697,7 +705,7 @@ fn json_response(status_code: u16, body: &str) -> String {
 
 fn percent_decode(input: &str) -> String {
     let bytes = input.as_bytes();
-    let mut result = String::with_capacity(input.len());
+    let mut result = Vec::with_capacity(input.len());
     let mut index = 0;
 
     while index < bytes.len() {
@@ -705,20 +713,20 @@ fn percent_decode(input: &str) -> String {
             b'%' if index + 2 < bytes.len() => {
                 let hex = &input[index + 1..index + 3];
                 if let Ok(value) = u8::from_str_radix(hex, 16) {
-                    result.push(value as char);
+                    result.push(value);
                     index += 3;
                     continue;
                 }
-                result.push('%');
+                result.push(b'%');
             }
-            b'+' => result.push(' '),
-            value => result.push(value as char),
+            b'+' => result.push(b' '),
+            value => result.push(value),
         }
 
         index += 1;
     }
 
-    result
+    String::from_utf8_lossy(&result).into_owned()
 }
 
 fn escape_json(input: &str) -> String {
