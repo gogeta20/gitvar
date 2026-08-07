@@ -10,6 +10,28 @@ import { ThemeSettingsModal } from "@app/settings/ThemeSettingsModal";
 import { DEFAULT_THEME_ID } from "@app/settings/themePresets";
 
 const MAX_RECENT_REPOSITORIES = 8;
+const LEGACY_BROWSE_ROOT = "/host/projects";
+const DEFAULT_BROWSE_ROOT = "/host/home/projects";
+
+function migrateRepositoryPath(path: string): string {
+  return path.startsWith(LEGACY_BROWSE_ROOT)
+    ? `${DEFAULT_BROWSE_ROOT}${path.slice(LEGACY_BROWSE_ROOT.length)}`
+    : path;
+}
+
+function migrateRepository(repository: RepositorySummary): RepositorySummary {
+  const nextPath = migrateRepositoryPath(repository.path);
+
+  if (nextPath === repository.path && repository.id === repository.path) {
+    return repository;
+  }
+
+  return {
+    ...repository,
+    id: repository.id === repository.path ? nextPath : repository.id,
+    path: nextPath
+  };
+}
 
 export function App() {
   const [themeId, setThemeId] = usePersistedState<string>("gitmap.themeId", DEFAULT_THEME_ID);
@@ -32,14 +54,24 @@ export function App() {
     []
   );
 
+  useEffect(() => {
+    setOpenRepositories((current) => current.map(migrateRepository));
+    setRecentRepositories((current) => current.map(migrateRepository));
+    setActiveRepositoryId((current) => (current ? migrateRepositoryPath(current) : current));
+  }, [setActiveRepositoryId, setOpenRepositories, setRecentRepositories]);
+
   function handleOpenRepository(repository: RepositorySummary) {
+    const normalizedRepository = migrateRepository(repository);
+
     setOpenRepositories((current) =>
-      current.some((item) => item.id === repository.id) ? current : [...current, repository]
+      current.some((item) => item.id === normalizedRepository.id)
+        ? current
+        : [...current, normalizedRepository]
     );
-    setActiveRepositoryId(repository.id);
+    setActiveRepositoryId(normalizedRepository.id);
     setRecentRepositories((current) => {
-      const withoutDuplicate = current.filter((item) => item.id !== repository.id);
-      return [repository, ...withoutDuplicate].slice(0, MAX_RECENT_REPOSITORIES);
+      const withoutDuplicate = current.filter((item) => item.id !== normalizedRepository.id);
+      return [normalizedRepository, ...withoutDuplicate].slice(0, MAX_RECENT_REPOSITORIES);
     });
   }
 
