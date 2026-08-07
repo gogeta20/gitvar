@@ -74,7 +74,7 @@ services:
       - /dev/dri:/dev/dri
     group_add:
       - "44"   # grupo "video" del host (ver `getent group video`)
-      - "110"  # grupo "render" del host (ver `getent group render`)
+      - "992"  # grupo "render" del host (ver `getent group render`)
     environment:
       - DISPLAY=${DISPLAY}
 ```
